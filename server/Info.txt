@@ -1,0 +1,3 @@
+﻿Server modules
+
+	npm install socket.io

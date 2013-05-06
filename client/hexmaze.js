@@ -1,36 +1,43 @@
+var mazeClient = new MazeClient(updateContent);
+
+function updateContent() {
+    var canvas = document.getElementById('mazecanvas');
+    var ctx = canvas.getContext("2d");
+    // ctx.clearRect(0, 0, width, height);
+    draw(ctx);
+}
 
 
 
-
-var ss = 8, sx = ss, sy = sx, cx = 2.5*ss, ccx = 5*ss, cy = 5*Math.sqrt(3)/2*ss;
+var ss = 8, sx = ss, sy = sx, cx = 2.5 * ss, ccx = 5 * ss, cy = 5 * Math.sqrt(3) / 2 * ss;
 var fat = 2;
-var dx = sx + cx + ccx, dy = sy + 2*cy;
+var dx = sx + cx + ccx, dy = sy + 2 * cy;
 
 /* omfg by far the hardest thing is to define these polygons */
-var blob1 = [[cx, sy/2], [cx+sx, 0], [cx+sx, sy]];
-var blob2 = [[dx, 0], [dx+sx, sy/2], [dx, sy]];
+var blob1 = [[cx, sy / 2], [cx + sx, 0], [cx + sx, sy]];
+var blob2 = [[dx, 0], [dx + sx, sy / 2], [dx, sy]];
 var wall = [
-  [[cx+sx, 0], [dx, 0], [dx, sy], [cx+sx, sy]],
-  [[0, cy+sy/2], [cx, sy/2], [cx+sx, sy], [sx, cy+sy]],
-  [[0, cy+3*sy/2], [sx, cy+sy], [cx+sx, dy], [cx, dy+sy/2]]
+  [[cx + sx, 0], [dx, 0], [dx, sy], [cx + sx, sy]],
+  [[0, cy + sy / 2], [cx, sy / 2], [cx + sx, sy], [sx, cy + sy]],
+  [[0, cy + 3 * sy / 2], [sx, cy + sy], [cx + sx, dy], [cx, dy + sy / 2]]
 ];
 var fatwall = [
-  [[cx+sx, -fat], [dx, -fat], [dx, sy+fat], [cx+sx, sy+fat]],
-  [[-fat, cy+sy/2 - fat*sy/sx/2], [cx-fat, sy/2 - fat*sy/sx/2], [cx+sx+fat, sy + fat*sy/sx/2], [sx+fat, cy+sy + fat*sy/sx/2]],
-  [[-fat, cy+3*sy/2 + fat*sy/sx/2], [sx+fat, cy+sy - fat*sy/sx/2], [cx+sx+fat, dy - fat*sy/sx/2], [cx-fat, dy+sy/2 + fat*sy/sx/2]]
+  [[cx + sx, -fat], [dx, -fat], [dx, sy + fat], [cx + sx, sy + fat]],
+  [[-fat, cy + sy / 2 - fat * sy / sx / 2], [cx - fat, sy / 2 - fat * sy / sx / 2], [cx + sx + fat, sy + fat * sy / sx / 2], [sx + fat, cy + sy + fat * sy / sx / 2]],
+  [[-fat, cy + 3 * sy / 2 + fat * sy / sx / 2], [sx + fat, cy + sy - fat * sy / sx / 2], [cx + sx + fat, dy - fat * sy / sx / 2], [cx - fat, dy + sy / 2 + fat * sy / sx / 2]]
 ];
-var hexagon = [[cx+sx, sy], [dx, sy], [dx+cx, cy+sy], [dx, dy], [cx+sx, dy], [sx, cy+sy]];
+var hexagon = [[cx + sx, sy], [dx, sy], [dx + cx, cy + sy], [dx, dy], [cx + sx, dy], [sx, cy + sy]];
 
 var maze_in = [];
 var maze_prev = [];
-var maze_wall = [[],[],[]]; // up, leftup, leftdown
+var maze_wall = [[], [], []]; // up, leftup, leftdown
 var maze_sol = [];
 var padding = 1;
 var polys = [];
 var drawpolys = [];
 var solvepolys = [];
 var solutionlength;
-var q = [[[-1,-1],[-1,0],[0,-1],[0,1],[1,-1],[1,0]], [[-1,0],[-1,1],[0,-1],[0,1],[1,0],[1,1]]];
+var q = [[[-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]], [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]]];
 var changed, observer_x, observer_y, jump = 3, v;
 var width, height, xsize_maze, ysize_maze;
 var mousex = 0, mousey = 0;
@@ -38,14 +45,14 @@ var requestAnimFrame = window.webkitRequestAnimationFrame ||
   window.mozRequestAnimationFrame ||
   window.msRequestAnimationFrame ||
   window.oRequestAnimationFrame ||
-  function(callback, element) { setTimeout(callback, 50); };
+  function (callback, element) { setTimeout(callback, 50); };
 
 window.onload = function () {
 
     var stats = new xStats();
     stats.element.style.position = 'absolute';
     stats.element.style.left = 0;
-    stats.element.style.top= 0;
+    stats.element.style.top = 0;
     document.body.appendChild(stats.element);
 
     var canvas = document.getElementById('mazecanvas');
@@ -201,217 +208,240 @@ window.onload = function () {
 };
 
 function xy2xy(a) { // converts real pixel coordinates to maze cell coordinates
-  var dist = 999999999999;
-  var minx, miny;
-  for(var x=0; x<xsize_maze; x++) {
-    for(var y=0, yy = ysize_maze-x%2; y<yy; y++) {
-      var tempx = x*dx + cx + ccx/2 + sx;
-      var tempy = y*dy + cy + sy + (x%2)*(dy/2);
-      if(VisibilityPolygon.distance([tempx, tempy],a) < dist) {
-        dist = VisibilityPolygon.distance([tempx, tempy],a);
-        minx = x;
-        miny = y;
-      }
+    var dist = 999999999999;
+    var minx, miny;
+    for (var x = 0; x < xsize_maze; x++) {
+        for (var y = 0, yy = ysize_maze - x % 2; y < yy; y++) {
+            var tempx = x * dx + cx + ccx / 2 + sx;
+            var tempy = y * dy + cy + sy + (x % 2) * (dy / 2);
+            if (VisibilityPolygon.distance([tempx, tempy], a) < dist) {
+                dist = VisibilityPolygon.distance([tempx, tempy], a);
+                minx = x;
+                miny = y;
+            }
+        }
     }
-  }
-  return [minx, miny];
+    return [minx, miny];
 };
 
 function plus(x, y, p) {
-  var qqq = [];
-  for(var i=0, j=p.length; i<j; i++) {
-    qqq[i] = [p[i][0]+x, p[i][1]+y];
-  }
-  return qqq;
+    var qqq = [];
+    for (var i = 0, j = p.length; i < j; i++) {
+        qqq[i] = [p[i][0] + x, p[i][1] + y];
+    }
+    return qqq;
 };
 
 function solve(x1, y1, x2, y2) {
-  if(x1<padding || x1>=xsize_maze-padding || y1<padding || y1>=ysize_maze-x1%2-padding) return;
-  if(x2<padding || x2>=xsize_maze-padding || y2<padding || y2>=ysize_maze-x2%2-padding) return;
-  var solutions = [], sola = [], solb = [];
-  for(var x=0; x<xsize_maze; x++) {
-    for(var y=0, yy = ysize_maze-x%2; y<yy; y++) {
-      maze_sol[x][y] = 0;
+    if (x1 < padding || x1 >= xsize_maze - padding || y1 < padding || y1 >= ysize_maze - x1 % 2 - padding) return;
+    if (x2 < padding || x2 >= xsize_maze - padding || y2 < padding || y2 >= ysize_maze - x2 % 2 - padding) return;
+    var solutions = [], sola = [], solb = [];
+    for (var x = 0; x < xsize_maze; x++) {
+        for (var y = 0, yy = ysize_maze - x % 2; y < yy; y++) {
+            maze_sol[x][y] = 0;
+        }
     }
-  }
-  var overlap = false;
-  do {
-    sola.unshift([x1, y1]);
-    maze_sol[x1][y1] ^= 1;
-    var temp = maze_prev[x1][y1][0];
-    y1 = maze_prev[x1][y1][1];
-    x1 = temp;
-  } while(maze_prev[x1][y1][0] !== x1 || maze_prev[x1][y1][1] !== y1);
-  do {
-    if(!overlap && maze_sol[x2][y2]) {
-      overlap = true;
-      maze_sol[x2][y2] = true;
-    } else {
-      maze_sol[x2][y2] ^= 1;
+    var overlap = false;
+    do {
+        sola.unshift([x1, y1]);
+        maze_sol[x1][y1] ^= 1;
+        var temp = maze_prev[x1][y1][0];
+        y1 = maze_prev[x1][y1][1];
+        x1 = temp;
+    } while (maze_prev[x1][y1][0] !== x1 || maze_prev[x1][y1][1] !== y1);
+    do {
+        if (!overlap && maze_sol[x2][y2]) {
+            overlap = true;
+            maze_sol[x2][y2] = true;
+        } else {
+            maze_sol[x2][y2] ^= 1;
+        }
+        if (maze_sol[x2][y2]) {
+            solb.push([x2, y2]);
+        }
+        var temp = maze_prev[x2][y2][0];
+        y2 = maze_prev[x2][y2][1];
+        x2 = temp;
+    } while (maze_prev[x2][y2][0] !== x2 || maze_prev[x2][y2][1] !== y2);
+    solutions = solutions.concat(solb, sola);
+    for (var i = 0, j = solutions.length; i < j; i++) {
+        if (!maze_sol[solutions[i][0]][solutions[i][1]]) {
+            solutions.splice(i, 1);
+            i--;
+            j--;
+        }
     }
-    if(maze_sol[x2][y2]) {
-      solb.push([x2, y2]);
-    }
-    var temp = maze_prev[x2][y2][0];
-    y2 = maze_prev[x2][y2][1];
-    x2 = temp;
-  } while(maze_prev[x2][y2][0] !== x2 || maze_prev[x2][y2][1] !== y2);
-  solutions = solutions.concat(solb, sola);
-  for(var i=0, j=solutions.length; i<j; i++) {
-    if(!maze_sol[solutions[i][0]][solutions[i][1]]) {
-      solutions.splice(i,1);
-      i--;
-      j--;
-    }
-  }
-  solvepolygonize(solutions);
+    solvepolygonize(solutions);
 };
 
 function solvepolygonize(solutions) {
-  for(var a=0, b=solutions.length; a<b; a++) {
-    var x = solutions[a][0], y = solutions[a][1];
-    if(maze_sol[x][y]) {
-      solvepolys.push({polygon:plus(x*dx, y*dy + (x%2)*dy/2, hexagon), n:a});
-      if(!maze_wall[1][x][y]) {
-        if(x%2 === 1 && maze_sol[x-1][y]) {
-          solvepolys.push({polygon:plus(x*dx, y*dy + (x%2)*dy/2, fatwall[1]), n:a});
-        } else if(x%2 === 0 && maze_sol[x-1][y-1]) {
-          solvepolys.push({polygon:plus(x*dx, y*dy + (x%2)*dy/2, fatwall[1]), n:a});
+    for (var a = 0, b = solutions.length; a < b; a++) {
+        var x = solutions[a][0], y = solutions[a][1];
+        if (maze_sol[x][y]) {
+            solvepolys.push({ polygon: plus(x * dx, y * dy + (x % 2) * dy / 2, hexagon), n: a });
+            if (!maze_wall[1][x][y]) {
+                if (x % 2 === 1 && maze_sol[x - 1][y]) {
+                    solvepolys.push({ polygon: plus(x * dx, y * dy + (x % 2) * dy / 2, fatwall[1]), n: a });
+                } else if (x % 2 === 0 && maze_sol[x - 1][y - 1]) {
+                    solvepolys.push({ polygon: plus(x * dx, y * dy + (x % 2) * dy / 2, fatwall[1]), n: a });
+                }
+            }
+            if (!maze_wall[2][x][y]) {
+                if (x % 2 === 1 && maze_sol[x - 1][y + 1]) {
+                    solvepolys.push({ polygon: plus(x * dx, y * dy + (x % 2) * dy / 2, fatwall[2]), n: a });
+                } else if (x % 2 === 0 && maze_sol[x - 1][y]) {
+                    solvepolys.push({ polygon: plus(x * dx, y * dy + (x % 2) * dy / 2, fatwall[2]), n: a });
+                }
+            }
+            if (!maze_wall[0][x][y] && maze_sol[x][y - 1]) {
+                solvepolys.push({ polygon: plus(x * dx, y * dy + (x % 2) * dy / 2, fatwall[0]), n: a });
+            }
         }
-      }
-      if(!maze_wall[2][x][y]) {
-        if(x%2 === 1 && maze_sol[x-1][y+1]) {
-          solvepolys.push({polygon:plus(x*dx, y*dy + (x%2)*dy/2, fatwall[2]), n:a});
-        } else if(x%2 === 0 && maze_sol[x-1][y]) {
-          solvepolys.push({polygon:plus(x*dx, y*dy + (x%2)*dy/2, fatwall[2]), n:a});
-        }
-      }
-      if(!maze_wall[0][x][y] && maze_sol[x][y-1]) {
-        solvepolys.push({polygon:plus(x*dx, y*dy + (x%2)*dy/2, fatwall[0]), n:a});
-      }
     }
-  }
-  solutionlength = solutions.length;
+    solutionlength = solutions.length;
 };
 
 function chasemouse() {
-  solvepolys = [];
-  var vv = [[[-dx,-dy],[width+dx,-dy],[width+dx,height+dy],[-dx,height+dy]], v];
-  if(VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
-    var d = VisibilityPolygon.distance([mousex, mousey], [observer_x, observer_y]);
-    d = Math.sqrt(d);
-    if(d <= jump) return;
-    var x = observer_x + (mousex - observer_x)/d  * Math.sqrt(d);
-    var y = observer_y + (mousey - observer_y)/d  * Math.sqrt(d);
+    solvepolys = [];
+    var vv = [[[-dx, -dy], [width + dx, -dy], [width + dx, height + dy], [-dx, height + dy]], v];
+    if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
+        var d = VisibilityPolygon.distance([mousex, mousey], [observer_x, observer_y]);
+        d = Math.sqrt(d);
+        if (d <= jump) return;
+        var x = observer_x + (mousex - observer_x) / d * Math.sqrt(d);
+        var y = observer_y + (mousey - observer_y) / d * Math.sqrt(d);
+        if (x < 0 || x > width || y < 0 || y > height) return;
+        if (VisibilityPolygon.inObstacle([x, y], polys)) return;
+        observer_x = x;
+        observer_y = y;
+        mazeClient.updatePlayerPosition(x,y);
+        changed = true;
+    }
+};
+
+function update() {
+    chasemouse();
+    if (changed) {
+        var a1 = xy2xy([mousex, mousey]), a2 = xy2xy([observer_x, observer_y]);
+        solve(a1[0], a1[1], a2[0], a2[1]);
+        var canvas = document.getElementById('mazecanvas');
+        var ctx = canvas.getContext("2d");
+        // ctx.clearRect(0, 0, width, height);
+        draw(ctx);
+        changed = false;
+    }
+    requestAnimFrame(update);
+};
+
+function checkKey(e) {
+    var jump = 5;
+    e = e || window.event;
+    var x = observer_x;
+    var y = observer_y;
+    if (e.keyCode == '38') {
+        y -= jump;
+    } else if (e.keyCode == '40') {
+        y += jump;
+    } else if (e.keyCode == '39') {
+        x += jump;
+    } else if (e.keyCode == '37') {
+        x -= jump;
+    }
     if (x < 0 || x > width || y < 0 || y > height) return;
     if (VisibilityPolygon.inObstacle([x, y], polys)) return;
     observer_x = x;
     observer_y = y;
     changed = true;
-  }
-};
-
-function update() {
-  chasemouse();
-  if (changed) {
-    var a1 = xy2xy([mousex, mousey]), a2 = xy2xy([observer_x, observer_y]);
-    solve(a1[0], a1[1], a2[0], a2[1]);
-    var canvas = document.getElementById('mazecanvas');
-    var ctx = canvas.getContext("2d");
-    // ctx.clearRect(0, 0, width, height);
-    draw(ctx);
-    changed = false;
-  }
-  requestAnimFrame(update);
-};
-
-function checkKey(e) {
-  var jump = 5;
-  e = e || window.event;
-  var x = observer_x;
-  var y = observer_y;
-  if (e.keyCode == '38') {
-    y-=jump;
-  } else if (e.keyCode == '40') {
-    y+=jump;
-  } else if (e.keyCode == '39') {
-    x+=jump;
-  } else if (e.keyCode == '37') {
-    x-=jump;
-  }
-  if (x < 0 || x > width || y < 0 || y > height) return;
-  if (VisibilityPolygon.inObstacle([x, y], polys)) return;
-  observer_x = x;
-  observer_y = y;
-  changed = true;
 };
 
 function draw(ctx) {
-  ctx.beginPath();
-  ctx.rect(0, 0, width, height);
-  ctx.fillStyle = "#333";
-  ctx.fill();
-
-  /* illuminate corridor */
-  for(var i=0, j=drawpolys.length; i<j; i++) {
-    var qqq = drawpolys[i];
+    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(qqq[0][0], qqq[0][1]);
-    for(var k=1, l=qqq.length; k<l; k++) {
-      ctx.lineTo(qqq[k][0], qqq[k][1]);
-    }
-    ctx.fillStyle = "#444";
+    ctx.rect(0, 0, width, height);
+    ctx.fillStyle = "#333";
     ctx.fill();
-  }
 
-  /* display wall */
-  // for(var i=1, j=polys.length; i<j; i++) {
-  //   var qqq = polys[i];
-  //   ctx.beginPath();
-  //   ctx.moveTo(qqq[0][0], qqq[0][1]);
-  //   for(var k=1, l=qqq.length; k<l; k++) {
-  //     ctx.lineTo(qqq[k][0], qqq[k][1]);
-  //   }
-  //   ctx.fillStyle = "#cfc";
-  //   ctx.fill();
-  //   ctx.strokeStyle = '#0f0';
-  //   ctx.stroke();
-  // }
-
-  /* display solution */
-  for(var i=0, j=solvepolys.length; i<j; i++) {
-    var qqq = solvepolys[i].polygon;
-    ctx.beginPath();
-    ctx.moveTo(qqq[0][0], qqq[0][1]);
-    for(var k=1, l=qqq.length; k<l; k++) {
-      ctx.lineTo(qqq[k][0], qqq[k][1]);
+    /* illuminate corridor */
+    for (var i = 0, j = drawpolys.length; i < j; i++) {
+        var qqq = drawpolys[i];
+        ctx.beginPath();
+        ctx.moveTo(qqq[0][0], qqq[0][1]);
+        for (var k = 1, l = qqq.length; k < l; k++) {
+            ctx.lineTo(qqq[k][0], qqq[k][1]);
+        }
+        ctx.fillStyle = "#444";
+        ctx.fill();
     }
-    var red = Math.sqrt(solvepolys[i].n/solutionlength);
-    var green = Math.sqrt(1 - solvepolys[i].n/solutionlength);
-    ctx.fillStyle = "rgb(" + Math.floor(red*100) + "," + Math.floor(green*100) + ",0)";
-    ctx.fill();
-  }
 
-  v = VisibilityPolygon.compute([observer_x, observer_y], polys);
-  ctx.beginPath();
-  ctx.moveTo(v[0][0], v[0][1]);
-  for (var i=1, j=v.length; i<j; i++) {
-    ctx.lineTo(v[i][0], v[i][1]);
-  }
-  ctx.fillStyle = "rgba(255,255,255,0.2)";
-  ctx.fill();
+    /* display wall */
+    // for(var i=1, j=polys.length; i<j; i++) {
+    //   var qqq = polys[i];
+    //   ctx.beginPath();
+    //   ctx.moveTo(qqq[0][0], qqq[0][1]);
+    //   for(var k=1, l=qqq.length; k<l; k++) {
+    //     ctx.lineTo(qqq[k][0], qqq[k][1]);
+    //   }
+    //   ctx.fillStyle = "#cfc";
+    //   ctx.fill();
+    //   ctx.strokeStyle = '#0f0';
+    //   ctx.stroke();
+    // }
 
-  var vv = [[[-dx,-dy],[width+dx,-dy],[width+dx,height+dy],[-dx,height+dy]], v];
-  if(VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
+    /* display solution */
+    for (var i = 0, j = solvepolys.length; i < j; i++) {
+        var qqq = solvepolys[i].polygon;
+        ctx.beginPath();
+        ctx.moveTo(qqq[0][0], qqq[0][1]);
+        for (var k = 1, l = qqq.length; k < l; k++) {
+            ctx.lineTo(qqq[k][0], qqq[k][1]);
+        }
+        var red = Math.sqrt(solvepolys[i].n / solutionlength);
+        var green = Math.sqrt(1 - solvepolys[i].n / solutionlength);
+        ctx.fillStyle = "rgb(" + Math.floor(red * 100) + "," + Math.floor(green * 100) + ",0)";
+        ctx.fill();
+    }
+
+    v = VisibilityPolygon.compute([observer_x, observer_y], polys);
     ctx.beginPath();
-    ctx.moveTo(mousex,mousey);
-    ctx.lineTo(observer_x, observer_y);
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
-  }
+    ctx.moveTo(v[0][0], v[0][1]);
+    for (var i = 1, j = v.length; i < j; i++) {
+        ctx.lineTo(v[i][0], v[i][1]);
+    }
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fill();
 
-  ctx.beginPath();
-  ctx.arc(observer_x, observer_y, 5, 0, Math.PI*2, true);
-  ctx.fillStyle = "#fff";
-  ctx.fill();
+    var vv = [[[-dx, -dy], [width + dx, -dy], [width + dx, height + dy], [-dx, height + dy]], v];
+    if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(mousex, mousey);
+        ctx.lineTo(observer_x, observer_y);
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+        ctx.restore();
+    }
+    
+    for (var m = 0; m < mazeClient.players.length; m++) {
+        if (mazeClient.players[m] != mazeClient.currentPlayer) {
+            ctx.save();
+    
+            ctx.beginPath();
+            ctx.arc(mazeClient.players[m].x, mazeClient.players[m].y, 5, 0, Math.PI * 2, true);
+            ctx.fillStyle = "red";
+            ctx.fill();
+            ctx.restore();
+
+        }
+    }
+    
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(observer_x, observer_y, 5, 0, Math.PI * 2, true);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.restore();
+    
+    ctx.restore();
+    
 };
