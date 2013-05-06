@@ -89,9 +89,9 @@ function GameRoom() {
 
     };
     self.startGame = function () {
-        var maze = new MazeGenerator(5, 5);
+        var maze = new MazeGenerator(10, 10);
 
-        maze = JSON.stringify(maze);
+        //maze = JSON.stringify(maze);
         for (var i = 0; i < self.players.length; i++) {
             self.players[i].sendMessage('Game.Started', maze); //todo probably send maze data here too
         }

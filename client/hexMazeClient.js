@@ -33,8 +33,25 @@
             updates.shift();
         }
     }, 75);
-    client.on('Game.Started', function () {
-        
+    client.on('Game.Started', function (data) {
+        if(data !== undefined) {
+            Maze.xsize = data.maze_in.length;
+            Maze.ysize = data.maze_in[0].length;
+            Maze.in = clone(data.maze_in);
+            Maze.prev = clone(data.maze_prev);
+            Maze.wall = clone(data.maze_wall);
+            Maze.xsize = Maze.in.length;
+            Maze.ysize = Maze.in[0].length;
+            for(var x=0; x<Maze.xsize; x++) {
+                Maze.sol[x] = [];
+                for(var y=0; y<Maze.ysize; y++) {
+                    Maze.sol[x][y] = 0;
+                }
+            }
+            polygonize();
+            updateContent();
+        }
+        console.log(Maze);
     });
 
  /*   client.on('Game.MazeData', function (mazeData) {
