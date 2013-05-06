@@ -14,6 +14,7 @@ fs.readdir('./', function (err, files) {
                     throw err;
                 }
                 webFiles["/" + file] = data;
+                watchFile('./' + file, '/' + file);
             });
         })(files[i]);
     }
@@ -21,18 +22,33 @@ fs.readdir('./', function (err, files) {
 
 fs.readdir('./lib', function (err, files) {
     for (var i = 0; i < files.length; i++) {
-        (function(file) {
-            fs.readFile('./lib/' + file, function(err2, data) {
+        (function (file) {
+            fs.readFile('./lib/' + file, function (err2, data) {
                 console.log(file);
                 if (err) {
                     throw err;
                 }
                 webFiles['/lib/' + file] = data;
+                watchFile('./lib/' + file, '/lib/' + file);
             });
         })(files[i]);
     }
 });
 
+function watchFile(file,fileName) {
+    fs.watchFile(file, function (curr, prev) {
+        console.log('watch '+file)
+        if (+curr.mtime === +prev.mtime) {
+        } else {
+            fs.readFile(file, function (err2, data) {
+                if (err2) {
+                    throw err2;
+                }
+                webFiles[fileName] = data;
+            });
+        }
+    });
+}
 
 http.createServer(function (request, response) {
     var url = request.url;
