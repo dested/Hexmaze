@@ -24,6 +24,8 @@ io.sockets.on('connection', function (socket) {
     });
 });
 
+var MazeGenerator=require('./hexmazeServer.js').MazeGenerator;
+
 var CommunicationLayer = function() {
 
 };
@@ -87,13 +89,14 @@ function GameRoom() {
 
     };
     self.startGame = function () {
-        //todo generate maze
+        var maze = new MazeGenerator(5, 5);
+
+        maze = JSON.stringify(maze);
         for (var i = 0; i < self.players.length; i++) {
-            self.players[i].sendMessage('Game.Started'); //todo probably send maze data here too
+            self.players[i].sendMessage('Game.Started', maze); //todo probably send maze data here too
         }
     };
     self.movePlayer = function (player, moveData) {
-
 
         player.position.x = moveData.x;
         player.position.y = moveData.y;

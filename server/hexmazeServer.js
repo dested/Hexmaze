@@ -1,6 +1,4 @@
-﻿function MazeGenerate() {};
-
-MazeGenerate.generate = function(xsize_maze, ysize_maze) {
+﻿function MazeGenerator(xsize_maze, ysize_maze) {
     // creates a maze of dimensions xsize_Maze and ysize_maze.
     // notice that the usable area is xsize_maze-2 by ysize_maze-2 since there is a padding of 1 cell.
     // also, even columns are shorter by 1 cell.
@@ -9,10 +7,10 @@ MazeGenerate.generate = function(xsize_maze, ysize_maze) {
     var maze_prev = [];
     var maze_wall = [[], [], []]; // up, leftup, leftdown
     var padding = 1;
+    var q = [[[-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]], [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]]];
 
     for (var x = 0; x < xsize_maze; x++) {
         maze_in[x] = [];
-        maze_sol[x] = [];
         maze_prev[x] = [];
         maze_wall[0][x] = [];
         maze_wall[1][x] = [];
@@ -97,3 +95,5 @@ MazeGenerate.generate = function(xsize_maze, ysize_maze) {
 
     return {maze_in:maze_in, maze_wall:maze_wall, maze_prev:maze_prev};
 };
+
+exports.MazeGenerator=MazeGenerator;

@@ -3,7 +3,7 @@
     self.players = [];
     self.currentPlayerID = null;
     self.currentPlayer = null;
-    var client = io.connect('198.211.107.235:3343');
+    var client = io.connect('192.168.1.68:3343');
 
 
     client.on('Game.PlayerLeft', function (data) {
