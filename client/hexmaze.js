@@ -1,4 +1,4 @@
-var mazeClient = new MazeClient(updateContent);
+window.mazeClient = new MazeClient(updateContent);
 
 function updateContent() {
     var canvas = document.getElementById('mazecanvas');

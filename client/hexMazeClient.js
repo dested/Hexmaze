@@ -3,12 +3,14 @@
     self.players = [];
     self.currentPlayerID = null;
     self.currentPlayer = null;
-    var client = io.connect('192.168.1.68:3343');
+    var client = this.client=io.connect('192.168.1.8:2222');
 
 
     client.on('Game.PlayerLeft', function (data) {
 
     });
+
+    
     client.on('Game.PlayerWon', function (data1) {
         window.alert('Player ' + data1 + ' Won!');
         client = null;

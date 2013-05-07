@@ -7,16 +7,21 @@ var app = http.createServer(function (req, res) {
 });
 var io = require('socket.io').listen(app);
 var fs = require('fs');
-app.listen(3343);
+app.listen(2222);
 io.set('log level', 0);
 var server = new HexmazeServer();
 var count = 0;
+    console.log('started' );
+
 io.sockets.on('connection', function (socket) {
     var userID = count++;
     console.log('User Joined ' + userID);
     server.addPlayer(userID, socket);
     socket.on('Game.UpdatePosition', function (moveData) {
         server.movePlayer(userID, moveData);
+    });
+    socket.on('WaitingRoom.VoteStart', function (vote) {
+        server.playerVoted(userID, vote);
     });
     socket.on('disconnect', function () {
         console.log('User Left ' + userID);
@@ -26,9 +31,6 @@ io.sockets.on('connection', function (socket) {
 
 var MazeGenerator=require('./hexmazeServer.js').MazeGenerator;
 
-var CommunicationLayer = function() {
-
-};
 function HexmazeServer() {
     var gameRooms = [];
 
@@ -39,21 +41,43 @@ function HexmazeServer() {
                 for (var j = 0; j < gameRooms[i].players.length; j++) {
                     if (gameRooms[i].players[j].userID == _userID) {
                         gameRooms[i].movePlayer(gameRooms[i].players[j], _moveData);
+                        return;
                     }
                 }
             }
         }
     };
     this.removePlayer = function (_userID) {
+        for (var i = 0; i < gameRooms.length; i++) {
+                for (var j = 0; j < gameRooms[i].players.length; j++) {
+                    if (gameRooms[i].players[j].userID == _userID) {
+                        console.log('removing player: ' + _userID);
+                        gameRooms[i].removePlayer(gameRooms[i].players[j]);
+                        if (gameRooms[i].players.length == 0) {
+                            gameRooms.splice(i, 1);
+                            console.log('game removed, games open: ' + gameRooms.length);
+                        }
+                        return;
+                    }
+                }
+        }
 
     };
-    this.changeVoteStart = function (_userID, _vote) {
+    this.playerVoted = function (_userID, _vote) {
+        for (var i = 0; i < gameRooms.length; i++) {
+                for (var j = 0; j < gameRooms[i].players.length; j++) {
+                    if (gameRooms[i].players[j].userID == _userID) {
+                        gameRooms[i].playerVoted(gameRooms[i].players[j], _vote);
+                        return;
+                    }
 
+            }
+        }
     };
     this.addPlayer = function (_userID, _socket) {
         var player = new Player(_userID, _socket);
         for (var i = 0; i < gameRooms.length; i++) {
-            if (!gameRooms[i].started && gameRooms[i].players.length < 2) {
+            if (!gameRooms[i].started && gameRooms[i].players.length < 6) {
                 console.log('adding player to room: ' + gameRooms[i].id + ' user: ' + player.userID);
                 gameRooms[i].addPlayer(player);
                 return;
@@ -75,25 +99,82 @@ function GameRoom() {
 
         self.players.push(player);
 
-        var playersData = self.players.map(function (p) { return { userID: p.userID,x:0,y:0 }; });
+        var playersData = self.players.map(function (p) { return { userID: p.userID, x: 0, y: 0 }; });
+
+        var playersVoted = 0;
+        for (var i = 0; i < self.players.length; i++) {
+            playersVoted += (self.players[i].votedToStart ? 1 : 0);
+        }
+
 
         for (var i = 0; i < self.players.length; i++) {
             self.players[i].sendMessage('Game.PlayerInfo', playersData);
+            self.players[i].sendMessage('WaitingRoom.PlayerCountChanged', self.players.length);
+            self.players[i].sendMessage('WaitingRoom.VoteStartChanged', playersVoted);
         }
 
-        if (self.players.length == 2) {
+        if (self.players.length == playersVoted) {
             self.started = true;
             self.startGame();
-            
+
+        }
+
+    };
+    self.playerVoted = function(player, voteStatus) {
+
+        player.votedToStart = voteStatus;
+
+        var playersVoted = 0;
+        for (var i = 0; i < self.players.length; i++) {
+            playersVoted += (self.players[i].votedToStart ? 1 : 0);
+        }
+
+
+        for (var i = 0; i < self.players.length; i++) {
+            self.players[i].sendMessage('WaitingRoom.PlayerCountChanged', self.players.length);
+            self.players[i].sendMessage('WaitingRoom.VoteStartChanged', playersVoted);
+        }
+
+        if (self.players.length == playersVoted) {
+            self.started = true;
+            self.startGame();
+
+        }
+
+    };
+    self.removePlayer = function (player) {
+        console.log('player remvoed: ' + self.players.indexOf(player));
+
+        self.players.splice(self.players.indexOf(player), 1);
+
+        console.log('players left: ' + self.players.length);
+
+
+        var playersVoted = 0;
+        for (var i = 0; i < self.players.length; i++) {
+            playersVoted += (self.players[i].votedToStart ? 1 : 0);
+        }
+
+
+        for (var i = 0; i < self.players.length; i++) {
+            self.players[i].sendMessage('WaitingRoom.PlayerCountChanged', self.players.length);
+            self.players[i].sendMessage('WaitingRoom.VoteStartChanged', playersVoted);
+        }
+
+        if (self.players.length == playersVoted) {
+            self.started = true;
+            self.startGame();
+
         }
 
     };
     self.startGame = function () {
+        
         var maze = new MazeGenerator(10, 10);
 
-        //maze = JSON.stringify(maze);
         for (var i = 0; i < self.players.length; i++) {
-            self.players[i].sendMessage('Game.Started', maze); //todo probably send maze data here too
+            self.players[i].sendMessage('WaitingRoom.GameBeginning');
+            self.players[i].sendMessage('Game.Started', maze); 
         }
     };
     self.movePlayer = function (player, moveData) {
@@ -120,6 +201,7 @@ function GameRoom() {
 function Player(userID, _socket) {
     this.userID = userID;
     this.position = { x: 0, y: 0 };
+    this.votedToStart = false;
     this.sendMessage = function (msg, data) {
         _socket.emit(msg, data);
     };

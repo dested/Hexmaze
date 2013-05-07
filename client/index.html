@@ -1,53 +1,84 @@
 <!DOCTYPE HTML>
-<html>
-  <head>
+<html ng-app="hexmaze">
+<head>
     <title>hex maze</title>
     <style>
-      body {
-        margin: 0px;
-        padding: 0px;
-        font-family: sans-serif;
-        background-color: #333;
-        color: #bbb;
-        overflow: hidden;
-        position: relative;
-      }
-      a, a:visited {
-        color: #8be;
-        text-decoration: none;
-      }
-      p {
-        position: absolute;
-        top: 0px;
-        left: 0px;
-        width: 100%;
-        text-align: center;
-        font-size: 16px;
-      }
+        body
+        {
+            margin: 0px;
+            padding: 0px;
+            font-family: sans-serif;
+            background-color: #333;
+            color: #bbb;
+            overflow: hidden;
+            position: relative;
+        }
+        a, a:visited
+        {
+            color: #8be;
+            text-decoration: none;
+        }
+        p
+        {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+        }
+        .ui
+        {
+            background-color: #191970;
+            color: white;
+            width: 250px;
+            height: 250px;
+            position: absolute;
+            display: block;
+            left: 250px;
+            top: 250px;
+        }
     </style>
+    <script type="text/javascript" src="lib/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="lib/jquery-ui-1.10.3.custom.js"></script>
     <script type="text/javascript" src="lib/visibility_polygon.js"></script>
     <script type="text/javascript" src="lib/socket.io.js"></script>
     <script type="text/javascript" src="lib/Stats.js"></script>
     <script type="text/javascript" src="lib/keyboardjs.js"></script>
-      <script type="text/javascript" src="hexMazeClient.js"></script>
-      <script type="text/javascript" src="hexmaze.js"></script>
-  </head>
-  <body>
+    <script type="text/javascript" src="lib/angular.js"></script>
+    <script type="text/javascript" src="hexMazeClient.js"></script>
+    <script type="text/javascript" src="hexmaze.js"></script>
+    <script type="text/javascript" src="angularApp.js"></script>
+    <script type="text/javascript" src="controllers.js"></script>
+</head>
+<body>
     <canvas id="mazecanvas"></canvas>
-    <p>Hexagonal maze by <a href="/">dllu</a>. The white dot will follow your mouse cursor if it is within line of sight (alternatively move it using arrow keys).</p>
+    <p>
+        Hexagonal maze by <a href="/">dllu</a>. The white dot will follow your mouse cursor
+        if it is within line of sight (alternatively move it using arrow keys).</p>
+    <div ng-controller="VoterCtrl">
+        <div draggable class="ui" ng-style="windowVisible()">
+            <h1>Welcome to HexMaze</h1>
+            <section>
+                <span>Players in waiting room: {{playersInWaitingRoom}}</span><br />
+                <span>Players voted to start: {{playersVotedToStart}}</span>
+                <button ng-click="voteToStart()">Vote To Start</button>
+            </section> 
+        </div>
+    </div>
     <!--p>Created by <a href="http://dllu.net">D. L. Lu</a> (<a href="mailto:dllu@dllu.net">email me</a>).</p-->
     <script type="text/javascript">
 
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-28349585-1']);
-      _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-28349585-1']);
+        _gaq.push(['_trackPageview']);
 
-      (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
+        (function () {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
 
     </script>
-  </body>
+</body>
 </html>
