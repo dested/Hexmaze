@@ -7,7 +7,7 @@ function updateContent() {
     draw(ctx);
 }
 
-/* GEOMETRY
+/* GEO
                                   ^ sy   ^  ^
                 <------ dx ------>V      |  |
                          /--------\      |  |
@@ -24,74 +24,74 @@ function updateContent() {
                         \----------/        V
 */
 
-function GEOMETRY() {};
-GEOMETRY.ss = 3;                                   // overall size multiplier
-GEOMETRY.sx = GEOMETRY.ss;                         // horizontal spacing between hexagons
-GEOMETRY.sy = GEOMETRY.sx;                         // vertical spacing between hexagons
-GEOMETRY.cx = 2.5 * GEOMETRY.ss;                   // more cx... <[ ]>; less cx... [ ]
-GEOMETRY.ccx = 5 * GEOMETRY.ss;                    // more ccx... <[  ]>; less ccx... <[]>
-GEOMETRY.cy = 5 * Math.sqrt(3) / 2 * GEOMETRY.ss;  // height of hexagon
-GEOMETRY.f = 2;         // f is for fat. Used to generate fatwall, which fixes rendering issues with polygons sharing an edge
+function GEO() {};
+GEO.ss = 3;                                   // overall size multiplier
+GEO.sx = GEO.ss;                         // horizontal spacing between hexagons
+GEO.sy = GEO.sx;                         // vertical spacing between hexagons
+GEO.cx = 2.5 * GEO.ss;                   // more cx... <[ ]>; less cx... [ ]
+GEO.ccx = 5 * GEO.ss;                    // more ccx... <[  ]>; less ccx... <[]>
+GEO.cy = 5 * Math.sqrt(3) / 2 * GEO.ss;  // height of hexagon
+GEO.f = 2;         // f is for fat. Used to generate fatwall, which fixes rendering issues with polygons sharing an edge
 
-GEOMETRY.dx = GEOMETRY.sx + GEOMETRY.cx + GEOMETRY.ccx;    // total width of maze cell including space
-GEOMETRY.dy = GEOMETRY.sy + 2 * GEOMETRY.cy;               // total height of maze cell including space
+GEO.dx = GEO.sx + GEO.cx + GEO.ccx;    // total width of maze cell including space
+GEO.dy = GEO.sy + 2 * GEO.cy;               // total height of maze cell including space
 
 /* polygon definitions */
-GEOMETRY.corner1 = [                           // top left corner of of hexagon
-    [GEOMETRY.cx, GEOMETRY.sy / 2], 
-    [GEOMETRY.cx + GEOMETRY.sx, 0], 
-    [GEOMETRY.cx + GEOMETRY.sx, GEOMETRY.sy]
+GEO.corner1 = [                           // top left corner of of hexagon
+    [GEO.cx, GEO.sy / 2],
+    [GEO.cx + GEO.sx, 0],
+    [GEO.cx + GEO.sx, GEO.sy]
 ];
-GEOMETRY.corner2 = [                           // top right corner of hexagon
-    [GEOMETRY.dx, 0], 
-    [GEOMETRY.dx + GEOMETRY.sx, GEOMETRY.sy / 2], 
-    [GEOMETRY.dx, GEOMETRY.sy]
+GEO.corner2 = [                           // top right corner of hexagon
+    [GEO.dx, 0],
+    [GEO.dx + GEO.sx, GEO.sy / 2],
+    [GEO.dx, GEO.sy]
 ];
 /* top, top left, and bottom left walls respectively*/
-GEOMETRY.wall = [
+GEO.wall = [
     [
-        [GEOMETRY.cx + GEOMETRY.sx, 0], 
-        [GEOMETRY.dx, 0], 
-        [GEOMETRY.dx, GEOMETRY.sy], 
-        [GEOMETRY.cx + GEOMETRY.sx, GEOMETRY.sy]
+        [GEO.cx + GEO.sx, 0],
+        [GEO.dx, 0],
+        [GEO.dx, GEO.sy],
+        [GEO.cx + GEO.sx, GEO.sy]
     ],[
-        [0, GEOMETRY.cy + GEOMETRY.sy / 2], 
-        [GEOMETRY.cx, GEOMETRY.sy / 2], 
-        [GEOMETRY.cx + GEOMETRY.sx, GEOMETRY.sy], 
-        [GEOMETRY.sx, GEOMETRY.cy + GEOMETRY.sy]
+        [0, GEO.cy + GEO.sy / 2],
+        [GEO.cx, GEO.sy / 2],
+        [GEO.cx + GEO.sx, GEO.sy],
+        [GEO.sx, GEO.cy + GEO.sy]
     ],[
-        [0, GEOMETRY.cy + 3 * GEOMETRY.sy / 2], 
-        [GEOMETRY.sx, GEOMETRY.cy + GEOMETRY.sy], 
-        [GEOMETRY.cx + GEOMETRY.sx, GEOMETRY.dy], 
-        [GEOMETRY.cx, GEOMETRY.dy + GEOMETRY.sy / 2]]
+        [0, GEO.cy + 3 * GEO.sy / 2],
+        [GEO.sx, GEO.cy + GEO.sy],
+        [GEO.cx + GEO.sx, GEO.dy],
+        [GEO.cx, GEO.dy + GEO.sy / 2]]
 ];
 /* thicker walls */
-GEOMETRY.fatwall = [
+GEO.fatwall = [
     [
-        [GEOMETRY.cx + GEOMETRY.sx, -GEOMETRY.f], 
-        [GEOMETRY.dx, -GEOMETRY.f], 
-        [GEOMETRY.dx, GEOMETRY.sy + GEOMETRY.f], 
-        [GEOMETRY.cx + GEOMETRY.sx, GEOMETRY.sy + GEOMETRY.f]
+        [GEO.cx + GEO.sx, -GEO.f],
+        [GEO.dx, -GEO.f],
+        [GEO.dx, GEO.sy + GEO.f],
+        [GEO.cx + GEO.sx, GEO.sy + GEO.f]
     ],[
-        [-GEOMETRY.f, GEOMETRY.cy + GEOMETRY.sy / 2 - GEOMETRY.f * GEOMETRY.sy / GEOMETRY.sx / 2], 
-        [GEOMETRY.cx - GEOMETRY.f, GEOMETRY.sy / 2 - GEOMETRY.f * GEOMETRY.sy / GEOMETRY.sx / 2], 
-        [GEOMETRY.cx + GEOMETRY.sx + GEOMETRY.f, GEOMETRY.sy + GEOMETRY.f * GEOMETRY.sy / GEOMETRY.sx / 2], 
-        [GEOMETRY.sx + GEOMETRY.f, GEOMETRY.cy + GEOMETRY.sy + GEOMETRY.f * GEOMETRY.sy / GEOMETRY.sx / 2]
+        [-GEO.f, GEO.cy + GEO.sy / 2 - GEO.f * GEO.sy / GEO.sx / 2],
+        [GEO.cx - GEO.f, GEO.sy / 2 - GEO.f * GEO.sy / GEO.sx / 2],
+        [GEO.cx + GEO.sx + GEO.f, GEO.sy + GEO.f * GEO.sy / GEO.sx / 2],
+        [GEO.sx + GEO.f, GEO.cy + GEO.sy + GEO.f * GEO.sy / GEO.sx / 2]
     ],[
-        [-GEOMETRY.f, GEOMETRY.cy + 3 * GEOMETRY.sy / 2 + GEOMETRY.f * GEOMETRY.sy / GEOMETRY.sx / 2], 
-        [GEOMETRY.sx + GEOMETRY.f, GEOMETRY.cy + GEOMETRY.sy - GEOMETRY.f * GEOMETRY.sy / GEOMETRY.sx / 2], 
-        [GEOMETRY.cx + GEOMETRY.sx + GEOMETRY.f, GEOMETRY.dy - GEOMETRY.f * GEOMETRY.sy / GEOMETRY.sx / 2], 
-        [GEOMETRY.cx - GEOMETRY.f, GEOMETRY.dy + GEOMETRY.sy / 2 + GEOMETRY.f * GEOMETRY.sy / GEOMETRY.sx / 2]
+        [-GEO.f, GEO.cy + 3 * GEO.sy / 2 + GEO.f * GEO.sy / GEO.sx / 2],
+        [GEO.sx + GEO.f, GEO.cy + GEO.sy - GEO.f * GEO.sy / GEO.sx / 2],
+        [GEO.cx + GEO.sx + GEO.f, GEO.dy - GEO.f * GEO.sy / GEO.sx / 2],
+        [GEO.cx - GEO.f, GEO.dy + GEO.sy / 2 + GEO.f * GEO.sy / GEO.sx / 2]
     ]
 ];
 /* actual hexagon */
-GEOMETRY.hexagon = [
-    [GEOMETRY.cx + GEOMETRY.sx, GEOMETRY.sy], 
-    [GEOMETRY.dx, GEOMETRY.sy], 
-    [GEOMETRY.dx + GEOMETRY.cx, GEOMETRY.cy + GEOMETRY.sy], 
-    [GEOMETRY.dx, GEOMETRY.dy], 
-    [GEOMETRY.cx + GEOMETRY.sx, GEOMETRY.dy], 
-    [GEOMETRY.sx, GEOMETRY.cy + GEOMETRY.sy]
+GEO.hexagon = [
+    [GEO.cx + GEO.sx, GEO.sy],
+    [GEO.dx, GEO.sy],
+    [GEO.dx + GEO.cx, GEO.cy + GEO.sy],
+    [GEO.dx, GEO.dy],
+    [GEO.cx + GEO.sx, GEO.dy],
+    [GEO.sx, GEO.cy + GEO.sy]
 ];
 
 /* variables pertaining to maze */
@@ -177,28 +177,28 @@ function polygonize() {
 
     // initialize first element of obstacles to bounding rectangle as required by visibility_polygon.js
     Maze.obstacle_polys = [[
-        [-GEOMETRY.dx, -GEOMETRY.dy], 
-        [width + GEOMETRY.dx, -GEOMETRY.dy], 
-        [width + GEOMETRY.dx, height + GEOMETRY.dy], 
-        [-GEOMETRY.dx, height + GEOMETRY.dy]
+        [-GEO.dx, -GEO.dy],
+        [width + GEO.dx, -GEO.dy],
+        [width + GEO.dx, height + GEO.dy],
+        [-GEO.dx, height + GEO.dy]
     ]];
     Maze.walkable_polys = [];
     for (var x = 0; x < Maze.xsize; x++) {
         for (var y = 0, yy = Maze.ysize - x % 2; y < yy; y++) {
             for (var w = 0; w < 3; w++) {
                 if (Maze.wall[w][x][y] === 1) {
-                    Maze.obstacle_polys.push(plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.wall[w]));
+                    Maze.obstacle_polys.push(plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.wall[w]));
                 } else {
-                    Maze.walkable_polys.push(plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.fatwall[w]));
+                    Maze.walkable_polys.push(plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.fatwall[w]));
                 }
             }
-            Maze.obstacle_polys.push(plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.corner1));
-            Maze.obstacle_polys.push(plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.corner2));
+            Maze.obstacle_polys.push(plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.corner1));
+            Maze.obstacle_polys.push(plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.corner2));
             if (!Maze.in[x][y] || 
                 (x < Maze.padding || x >= Maze.xsize - Maze.padding || y < Maze.padding || y >= Maze.ysize - x % 2 - Maze.padding)) {
-                Maze.obstacle_polys.push(plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.hexagon));
+                Maze.obstacle_polys.push(plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.hexagon));
             } else {
-                Maze.walkable_polys.push(plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.hexagon));
+                Maze.walkable_polys.push(plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.hexagon));
             }
         }
     }
@@ -213,8 +213,8 @@ function pixels2mazecell(a) {
     var minx, miny;
     for (var x = 0; x < Maze.xsize; x++) {
         for (var y = 0, yy = Maze.ysize - x % 2; y < yy; y++) {
-            var tempx = x * GEOMETRY.dx + GEOMETRY.cx + GEOMETRY.ccx / 2 + GEOMETRY.sx;
-            var tempy = y * GEOMETRY.dy + GEOMETRY.cy + GEOMETRY.sy + (x % 2) * (GEOMETRY.dy / 2);
+            var tempx = x * GEO.dx + GEO.cx + GEO.ccx / 2 + GEO.sx;
+            var tempy = y * GEO.dy + GEO.cy + GEO.sy + (x % 2) * (GEO.dy / 2);
             if (VisibilityPolygon.distance([tempx, tempy], a) < dist) {
                 dist = VisibilityPolygon.distance([tempx, tempy], a);
                 minx = x;
@@ -282,28 +282,28 @@ function solvepolygonize(solutions) {
         var x = solutions[a][0], y = solutions[a][1];
         if (Maze.sol[x][y]) {
             Maze.solution_polys.push(
-                { polygon: plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.hexagon), n: a });
+                { polygon: plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.hexagon), n: a });
             if (!Maze.wall[1][x][y]) {
                 if (x % 2 === 1 && Maze.sol[x - 1][y]) {
                     Maze.solution_polys.push(
-                        { polygon: plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.fatwall[1]), n: a });
+                        { polygon: plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.fatwall[1]), n: a });
                 } else if (x % 2 === 0 && Maze.sol[x - 1][y - 1]) {
                     Maze.solution_polys.push(
-                        { polygon: plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.fatwall[1]), n: a });
+                        { polygon: plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.fatwall[1]), n: a });
                 }
             }
             if (!Maze.wall[2][x][y]) {
                 if (x % 2 === 1 && Maze.sol[x - 1][y + 1]) {
                     Maze.solution_polys.push(
-                        { polygon: plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.fatwall[2]), n: a });
+                        { polygon: plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.fatwall[2]), n: a });
                 } else if (x % 2 === 0 && Maze.sol[x - 1][y]) {
                     Maze.solution_polys.push(
-                        { polygon: plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.fatwall[2]), n: a });
+                        { polygon: plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.fatwall[2]), n: a });
                 }
             }
             if (!Maze.wall[0][x][y] && Maze.sol[x][y - 1]) {
                 Maze.solution_polys.push(
-                    { polygon: plus(x * GEOMETRY.dx, y * GEOMETRY.dy + (x % 2) * GEOMETRY.dy / 2, GEOMETRY.fatwall[0]), n: a });
+                    { polygon: plus(x * GEO.dx, y * GEO.dy + (x % 2) * GEO.dy / 2, GEO.fatwall[0]), n: a });
             }
         }
     }
@@ -312,10 +312,10 @@ function solvepolygonize(solutions) {
 // function chasemouse() {};{
 //     Maze.solution_polys = [];
 //     var vv = [[
-//         [-GEOMETRY.dx, -GEOMETRY.dy], 
-//         [width + GEOMETRY.dx, -GEOMETRY.dy], 
-//         [width + GEOMETRY.dx, height + GEOMETRY.dy], 
-//         [-GEOMETRY.dx, height + GEOMETRY.dy]
+//         [-GEO.dx, -GEO.dy],
+//         [width + GEO.dx, -GEO.dy],
+//         [width + GEO.dx, height + GEO.dy],
+//         [-GEO.dx, height + GEO.dy]
 //     ], v];
 //     if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
 //         var d = VisibilityPolygon.distance([mousex, mousey], [observer_x, observer_y]);
@@ -427,10 +427,10 @@ function draw(ctx) {
     // ctx.fill();
 
     // var vv = [[
-    //     [-GEOMETRY.dx, -GEOMETRY.dy], 
-    //     [width + GEOMETRY.dx, -GEOMETRY.dy], 
-    //     [width + GEOMETRY.dx, height + GEOMETRY.dy], 
-    //     [-GEOMETRY.dx, height + GEOMETRY.dy]
+    //     [-GEO.dx, -GEO.dy],
+    //     [width + GEO.dx, -GEO.dy],
+    //     [width + GEO.dx, height + GEO.dy],
+    //     [-GEO.dx, height + GEO.dy]
     // ], v];
     // if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
     //     ctx.save();

@@ -15,7 +15,6 @@
         window.alert('Player ' + data1 + ' Won!');
         client = null;
     });
-    window.setInterval(this.$flushMoveQueue, 500);
     var updates = [];
     client.on('Game.UpdatePosition', function (data) {
         for (var i = 0; i < data.length; i++) {
