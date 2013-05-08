@@ -107,7 +107,7 @@ Maze = {
     padding: 1,
 
     solution_polys: [],
-    solutionlength: 0, // not the same as solution_polys.length since each cell in solution may have more than one polygon.
+    solutionlength: 0 // not the same as solution_polys.length since each cell in solution may have more than one polygon.
 };
 
 var width, height;
@@ -309,42 +309,42 @@ function solvepolygonize(solutions) {
     }
 };
 
-// function chasemouse() {};{
-//     Maze.solution_polys = [];
-//     var vv = [[
-//         [-GEO.dx, -GEO.dy],
-//         [width + GEO.dx, -GEO.dy],
-//         [width + GEO.dx, height + GEO.dy],
-//         [-GEO.dx, height + GEO.dy]
-//     ], v];
-//     if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
-//         var d = VisibilityPolygon.distance([mousex, mousey], [observer_x, observer_y]);
-//         d = Math.sqrt(d);
-//         if (d <= jump) return;
-//         var x = observer_x + (mousex - observer_x) / d * Math.sqrt(d);
-//         var y = observer_y + (mousey - observer_y) / d * Math.sqrt(d);
-//         if (x < 0 || x > width || y < 0 || y > height) return;
-//         if (VisibilityPolygon.inObstacle([x, y], polys)) return;
-//         observer_x = x;
-//         observer_y = y;
-//         mazeClient.updatePlayerPosition(x,y);
-//         changed = true;
-//     }
-// };
+ function chasemouse()  {
+     Maze.solution_polys = [];
+     var vv = [[
+         [-GEO.dx, -GEO.dy],
+         [width + GEO.dx, -GEO.dy],
+         [width + GEO.dx, height + GEO.dy],
+         [-GEO.dx, height + GEO.dy]
+     ], v];
+     if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
+         var d = VisibilityPolygon.distance([mousex, mousey], [observer_x, observer_y]);
+         d = Math.sqrt(d);
+         if (d <= jump) return;
+         var x = observer_x + (mousex - observer_x) / d * Math.sqrt(d);
+         var y = observer_y + (mousey - observer_y) / d * Math.sqrt(d);
+         if (x < 0 || x > width || y < 0 || y > height) return;
+         if (VisibilityPolygon.inObstacle([x, y], Maze.obstacle_polys)) return;
+         observer_x = x;
+         observer_y = y;
+         mazeClient.updatePlayerPosition(x,y);
+         changed = true;
+     }
+ };
 
-// function update() {
-//     chasemouse();
-//     if (changed) {
-//         var a1 = pixels2mazecell([mousex, mousey]), a2 = pixels2mazecell([observer_x, observer_y]);
-//         solve(a1[0], a1[1], a2[0], a2[1]);
-//         var canvas = document.getElementById('mazecanvas');
-//         var ctx = canvas.getContext("2d");
-//         // ctx.clearRect(0, 0, width, height);
-//         draw(ctx);
-//         changed = false;
-//     }
-//     requestAnimFrame(update);
-// };
+  function update() {
+      chasemouse();
+      if (changed) {
+          var a1 = pixels2mazecell([mousex, mousey]), a2 = pixels2mazecell([observer_x, observer_y]);
+          solve(a1[0], a1[1], a2[0], a2[1]);
+          var canvas = document.getElementById('mazecanvas');
+          var ctx = canvas.getContext("2d");
+          // ctx.clearRect(0, 0, width, height);
+          draw(ctx);
+          changed = false;
+      }
+     requestAnimFrame(update);
+ };
 
 // function checkKey(e) {
 //     var jump = 5;
@@ -417,30 +417,30 @@ function draw(ctx) {
     }
 
     /* display visibility polygon */
-    // v = VisibilityPolygon.compute([observer_x, observer_y], Maze.obstacle_polys);
-    // ctx.beginPath();
-    // ctx.moveTo(v[0][0], v[0][1]);
-    // for (var i = 1, j = v.length; i < j; i++) {
-    //     ctx.lineTo(v[i][0], v[i][1]);
-    // }
-    // ctx.fillStyle = "rgba(255,255,255,0.2)";
-    // ctx.fill();
+ v = VisibilityPolygon.compute([observer_x, observer_y], Maze.obstacle_polys);
+ ctx.beginPath();
+ ctx.moveTo(v[0][0], v[0][1]);
+ for (var i = 1, j = v.length; i < j; i++) {
+     ctx.lineTo(v[i][0], v[i][1]);
+ }
+ ctx.fillStyle = "rgba(255,255,255,0.2)";
+ ctx.fill();
 
-    // var vv = [[
-    //     [-GEO.dx, -GEO.dy],
-    //     [width + GEO.dx, -GEO.dy],
-    //     [width + GEO.dx, height + GEO.dy],
-    //     [-GEO.dx, height + GEO.dy]
-    // ], v];
-    // if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
-    //     ctx.save();
-    //     ctx.beginPath();
-    //     ctx.moveTo(mousex, mousey);
-    //     ctx.lineTo(observer_x, observer_y);
-    //     ctx.strokeStyle = '#fff';
-    //     ctx.stroke();
-    //     ctx.restore();
-    // }
+ var vv = [[
+     [-GEO.dx, -GEO.dy],
+     [width + GEO.dx, -GEO.dy],
+     [width + GEO.dx, height + GEO.dy],
+     [-GEO.dx, height + GEO.dy]
+ ], v];
+ if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
+     ctx.save();
+     ctx.beginPath();
+     ctx.moveTo(mousex, mousey);
+     ctx.lineTo(observer_x, observer_y);
+     ctx.strokeStyle = '#fff';
+     ctx.stroke();
+     ctx.restore();
+ }
     
     for (var m = 0; m < mazeClient.players.length; m++) {
         if (mazeClient.players[m] != mazeClient.currentPlayer) {

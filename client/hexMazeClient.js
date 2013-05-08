@@ -49,8 +49,11 @@
                     Maze.sol[x][y] = 0;
                 }
             }
+            observer_x=50;
+            observer_y=50;
             polygonize();
             updateContent();
+            update();
         }
         console.log(Maze);
     });
