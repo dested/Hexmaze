@@ -3,7 +3,7 @@
     self.players = [];
     self.currentPlayerID = null;
     self.currentPlayer = null;
-    var client = this.client=io.connect('192.168.1.8:2222');
+    var client = this.client=io.connect('192.168.1.68:2222');
 
 
     client.on('Game.PlayerLeft', function (data) {
@@ -33,30 +33,8 @@
             updateContent();
             updates.shift();
         }
-    }, 75);
-    client.on('Game.Started', function (data) {
-        if(data !== undefined) {
-            Maze.xsize = data.maze_in.length;
-            Maze.ysize = data.maze_in[0].length;
-            Maze.in = clone(data.maze_in);
-            Maze.prev = clone(data.maze_prev);
-            Maze.wall = clone(data.maze_wall);
-            Maze.xsize = Maze.in.length;
-            Maze.ysize = Maze.in[0].length;
-            for(var x=0; x<Maze.xsize; x++) {
-                Maze.sol[x] = [];
-                for(var y=0; y<Maze.ysize; y++) {
-                    Maze.sol[x][y] = 0;
-                }
-            }
-            observer_x=50;
-            observer_y=50;
-            polygonize();
-            updateContent();
-            update();
-        }
-        console.log(Maze);
-    });
+    }, 16);
+    client.on('Game.Started', startGame);
 
  /*   client.on('Game.MazeData', function (mazeData) {
        ui. setupGame(players, currentPlayer, mazeData);

@@ -18,25 +18,32 @@
             color: #8be;
             text-decoration: none;
         }
-        p
-        {
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            width: 100%;
-            text-align: center;
-            font-size: 16px;
-        }
         .ui
         {
-            background-color: #191970;
-            color: white;
+            background-color: #eee;
+            color: #333;
+            border: 1px solid #ccc;
             width: 250px;
             height: 250px;
+            padding: 30px;
             position: absolute;
             display: block;
             left: 250px;
             top: 250px;
+        }
+        h1 {
+            font-size: 45px;
+            font-weight: normal;
+        }
+        h2 {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        h3 {
+            font-size: 18px;
+            font-weight: normal;
+            font-style: italic;
+            color: #555;
         }
     </style>
     <script type="text/javascript" src="lib/jquery-1.9.1.js"></script>
@@ -53,15 +60,12 @@
 </head>
 <body>
     <canvas id="mazecanvas"></canvas>
-    <p>
-        Hexagonal maze by <a href="/">dllu</a>. The white dot will follow your mouse cursor
-        if it is within line of sight (alternatively move it using arrow keys).</p>
     <div ng-controller="VoterCtrl">
         <div draggable class="ui" ng-style="windowVisible()">
-            <h1>Welcome to HexMaze</h1>
+            <h1>HexMaze</h1>
             <section>
-                <span>Players in waiting room: {{playersInWaitingRoom}}</span><br />
-                <span>Players voted to start: {{playersVotedToStart}}</span>
+                <p>Players in waiting room: {{playersInWaitingRoom}}</p>
+                <p>Players voted to start: {{playersVotedToStart}}</p>
                 <button ng-click="voteToStart()">Vote To Start</button>
             </section> 
         </div>

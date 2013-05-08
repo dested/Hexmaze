@@ -1,11 +1,10 @@
 window.mazeClient = new MazeClient(updateContent);
 
+var changed, v, started = false;;
+
 function updateContent() {
-    var canvas = document.getElementById('mazecanvas');
-    var ctx = canvas.getContext("2d");
-    // ctx.clearRect(0, 0, width, height);
-    draw(ctx);
-}
+    changed = true;
+};
 
 /* GEO
                                   ^ sy   ^  ^
@@ -25,79 +24,81 @@ function updateContent() {
 */
 
 function GEO() {};
-GEO.ss = 3;                                   // overall size multiplier
-GEO.sx = GEO.ss;                         // horizontal spacing between hexagons
-GEO.sy = GEO.sx;                         // vertical spacing between hexagons
-GEO.cx = 2.5 * GEO.ss;                   // more cx... <[ ]>; less cx... [ ]
-GEO.ccx = 5 * GEO.ss;                    // more ccx... <[  ]>; less ccx... <[]>
-GEO.cy = 5 * Math.sqrt(3) / 2 * GEO.ss;  // height of hexagon
-GEO.f = 2;         // f is for fat. Used to generate fatwall, which fixes rendering issues with polygons sharing an edge
+GEO.setSize = function(ss) {
+    GEO.ss = ss;                                   // overall size multiplier
+    GEO.sx = GEO.ss;                         // horizontal spacing between hexagons
+    GEO.sy = GEO.sx;                         // vertical spacing between hexagons
+    GEO.cx = 2.5 * GEO.ss;                   // more cx... <[ ]>; less cx... [ ]
+    GEO.ccx = 5 * GEO.ss;                    // more ccx... <[  ]>; less ccx... <[]>
+    GEO.cy = 5 * Math.sqrt(3) / 2 * GEO.ss;  // height of hexagon
+    GEO.f = 2;         // f is for fat. Used to generate fatwall, which fixes rendering issues with polygons sharing an edge
 
-GEO.dx = GEO.sx + GEO.cx + GEO.ccx;    // total width of maze cell including space
-GEO.dy = GEO.sy + 2 * GEO.cy;               // total height of maze cell including space
+    GEO.dx = GEO.sx + GEO.cx + GEO.ccx;    // total width of maze cell including space
+    GEO.dy = GEO.sy + 2 * GEO.cy;               // total height of maze cell including space
 
-/* polygon definitions */
-GEO.corner1 = [                           // top left corner of of hexagon
-    [GEO.cx, GEO.sy / 2],
-    [GEO.cx + GEO.sx, 0],
-    [GEO.cx + GEO.sx, GEO.sy]
-];
-GEO.corner2 = [                           // top right corner of hexagon
-    [GEO.dx, 0],
-    [GEO.dx + GEO.sx, GEO.sy / 2],
-    [GEO.dx, GEO.sy]
-];
-/* top, top left, and bottom left walls respectively*/
-GEO.wall = [
-    [
-        [GEO.cx + GEO.sx, 0],
-        [GEO.dx, 0],
-        [GEO.dx, GEO.sy],
-        [GEO.cx + GEO.sx, GEO.sy]
-    ],[
-        [0, GEO.cy + GEO.sy / 2],
+    /* polygon definitions */
+    GEO.corner1 = [                           // top left corner of of hexagon
         [GEO.cx, GEO.sy / 2],
+        [GEO.cx + GEO.sx, 0],
+        [GEO.cx + GEO.sx, GEO.sy]
+    ];
+    GEO.corner2 = [                           // top right corner of hexagon
+        [GEO.dx, 0],
+        [GEO.dx + GEO.sx, GEO.sy / 2],
+        [GEO.dx, GEO.sy]
+    ];
+    /* top, top left, and bottom left walls respectively*/
+    GEO.wall = [
+        [
+            [GEO.cx + GEO.sx, 0],
+            [GEO.dx, 0],
+            [GEO.dx, GEO.sy],
+            [GEO.cx + GEO.sx, GEO.sy]
+        ],[
+            [0, GEO.cy + GEO.sy / 2],
+            [GEO.cx, GEO.sy / 2],
+            [GEO.cx + GEO.sx, GEO.sy],
+            [GEO.sx, GEO.cy + GEO.sy]
+        ],[
+            [0, GEO.cy + 3 * GEO.sy / 2],
+            [GEO.sx, GEO.cy + GEO.sy],
+            [GEO.cx + GEO.sx, GEO.dy],
+            [GEO.cx, GEO.dy + GEO.sy / 2]]
+    ];
+    /* thicker walls */
+    GEO.fatwall = [
+        [
+            [GEO.cx + GEO.sx, -GEO.f],
+            [GEO.dx, -GEO.f],
+            [GEO.dx, GEO.sy + GEO.f],
+            [GEO.cx + GEO.sx, GEO.sy + GEO.f]
+        ],[
+            [-GEO.f, GEO.cy + GEO.sy / 2 - GEO.f * GEO.sy / GEO.sx / 2],
+            [GEO.cx - GEO.f, GEO.sy / 2 - GEO.f * GEO.sy / GEO.sx / 2],
+            [GEO.cx + GEO.sx + GEO.f, GEO.sy + GEO.f * GEO.sy / GEO.sx / 2],
+            [GEO.sx + GEO.f, GEO.cy + GEO.sy + GEO.f * GEO.sy / GEO.sx / 2]
+        ],[
+            [-GEO.f, GEO.cy + 3 * GEO.sy / 2 + GEO.f * GEO.sy / GEO.sx / 2],
+            [GEO.sx + GEO.f, GEO.cy + GEO.sy - GEO.f * GEO.sy / GEO.sx / 2],
+            [GEO.cx + GEO.sx + GEO.f, GEO.dy - GEO.f * GEO.sy / GEO.sx / 2],
+            [GEO.cx - GEO.f, GEO.dy + GEO.sy / 2 + GEO.f * GEO.sy / GEO.sx / 2]
+        ]
+    ];
+    /* actual hexagon */
+    GEO.hexagon = [
         [GEO.cx + GEO.sx, GEO.sy],
-        [GEO.sx, GEO.cy + GEO.sy]
-    ],[
-        [0, GEO.cy + 3 * GEO.sy / 2],
-        [GEO.sx, GEO.cy + GEO.sy],
+        [GEO.dx, GEO.sy],
+        [GEO.dx + GEO.cx, GEO.cy + GEO.sy],
+        [GEO.dx, GEO.dy],
         [GEO.cx + GEO.sx, GEO.dy],
-        [GEO.cx, GEO.dy + GEO.sy / 2]]
-];
-/* thicker walls */
-GEO.fatwall = [
-    [
-        [GEO.cx + GEO.sx, -GEO.f],
-        [GEO.dx, -GEO.f],
-        [GEO.dx, GEO.sy + GEO.f],
-        [GEO.cx + GEO.sx, GEO.sy + GEO.f]
-    ],[
-        [-GEO.f, GEO.cy + GEO.sy / 2 - GEO.f * GEO.sy / GEO.sx / 2],
-        [GEO.cx - GEO.f, GEO.sy / 2 - GEO.f * GEO.sy / GEO.sx / 2],
-        [GEO.cx + GEO.sx + GEO.f, GEO.sy + GEO.f * GEO.sy / GEO.sx / 2],
-        [GEO.sx + GEO.f, GEO.cy + GEO.sy + GEO.f * GEO.sy / GEO.sx / 2]
-    ],[
-        [-GEO.f, GEO.cy + 3 * GEO.sy / 2 + GEO.f * GEO.sy / GEO.sx / 2],
-        [GEO.sx + GEO.f, GEO.cy + GEO.sy - GEO.f * GEO.sy / GEO.sx / 2],
-        [GEO.cx + GEO.sx + GEO.f, GEO.dy - GEO.f * GEO.sy / GEO.sx / 2],
-        [GEO.cx - GEO.f, GEO.dy + GEO.sy / 2 + GEO.f * GEO.sy / GEO.sx / 2]
-    ]
-];
-/* actual hexagon */
-GEO.hexagon = [
-    [GEO.cx + GEO.sx, GEO.sy],
-    [GEO.dx, GEO.sy],
-    [GEO.dx + GEO.cx, GEO.cy + GEO.sy],
-    [GEO.dx, GEO.dy],
-    [GEO.cx + GEO.sx, GEO.dy],
-    [GEO.sx, GEO.cy + GEO.sy]
-];
+        [GEO.sx, GEO.cy + GEO.sy]
+    ];
+};
 
 /* variables pertaining to maze */
 Maze = {
-    xsize: 0, 
-    ysize: 0,
+    xsize: 2, 
+    ysize: 2,
     in: [[]],
     prev: [[]],
     wall: [[[]], [[]], [[]]], // up, leftup, leftdown
@@ -111,8 +112,8 @@ Maze = {
 };
 
 var width, height;
+var observer_x, observer_y;
 
-var changed, observer_x, observer_y, jump = 3, v;
 var mousex = 0, mousey = 0;
 var requestAnimFrame = window.webkitRequestAnimationFrame ||
   window.mozRequestAnimationFrame ||
@@ -133,6 +134,18 @@ window.onload = function () {
 };
 
 function init() {
+    var canvas = document.getElementById('mazecanvas');
+    canvas.onmousemove = function (evt) {
+        if (evt.offsetX) {
+            mousex = evt.offsetX; mousey = evt.offsetY;
+        } else if (evt.layerX) {
+            mousex = evt.layerX; mousey = evt.layerY;
+        }
+        changed = true;
+    };
+};
+
+function resize() {
     var canvas = document.getElementById('mazecanvas');
     canvas.height = height = window.innerHeight;
     canvas.width = width = window.innerWidth;
@@ -162,14 +175,42 @@ function init() {
         context.scale(ratio, ratio);
     }
 
-    canvas.onmousemove = function (evt) {
-        if (evt.offsetX) {
-            mousex = evt.offsetX; mousey = evt.offsetY;
-        } else if (evt.layerX) {
-            mousex = evt.layerX; mousey = evt.layerY;
+    GEO.setSize(Math.min(width/Maze.xsize/11, height/Maze.ysize/(1 + 10 * Math.sqrt(3) / 2)));
+    polygonize();
+    updateContent();
+}
+
+
+function startGame(data) {
+    if(data !== undefined) {
+        Maze.xsize = data.maze_in.length;
+        Maze.ysize = data.maze_in[0].length;
+        GEO.setSize(Math.min(width/Maze.xsize/11, height/Maze.ysize/(1 + 10 * Math.sqrt(3) / 2)));
+        Maze.in = clone(data.maze_in);
+        Maze.prev = clone(data.maze_prev);
+        Maze.wall = clone(data.maze_wall);
+        Maze.xsize = Maze.in.length;
+        Maze.ysize = Maze.in[0].length;
+        for(var x=0; x<Maze.xsize; x++) {
+            Maze.sol[x] = [];
+            for(var y=0; y<Maze.ysize; y++) {
+                Maze.sol[x][y] = 0;
+            }
         }
-        //changed = true;
-    };
+
+        resize();
+
+        observer_x=GEO.dx+GEO.sx+GEO.cx+GEO.ccx/2;
+        observer_y=GEO.dy+GEO.sy+GEO.cy + (observer_x%2)*GEO.cy;
+
+        observer_x/=GEO.ss;
+        observer_y/=GEO.ss;
+        update();
+
+        window.onresize = resize;
+        started = true;
+    }
+    console.log(Maze);
 };
 
 function polygonize() {
@@ -206,7 +247,7 @@ function polygonize() {
     Maze.walkable_polys = VisibilityPolygon.convertToClockwise(Maze.walkable_polys);
 };
 
-function pixels2mazecell(a) { 
+function pixels2mazecell_int(a) { 
     // converts real pixel coordinates to maze cell coordinates
     // note: this is a retarded implementation that runs in O(xsize*ysize) time instead of O(1);
     var dist = 999999999999;
@@ -234,7 +275,10 @@ function plus(x, y, p) {
 };
 
 function solve(x1, y1, x2, y2) {
+    console.log(started, Maze.sol, x1, y1, x2, y2);
     if(!Maze.xsize) return;
+    if(!Maze.in[x1][y1] || Maze.prev[x1][y1] === null || Maze.prev[x1][y1] === undefined) return;
+    if(!Maze.in[x2][y2] || Maze.prev[x2][y2] === null || Maze.prev[x2][y2] === undefined) return;
     if (x1 < Maze.padding || x1 >= Maze.xsize - Maze.padding || y1 < Maze.padding || y1 >= Maze.ysize - x1 % 2 - Maze.padding) return;
     if (x2 < Maze.padding || x2 >= Maze.xsize - Maze.padding || y2 < Maze.padding || y2 >= Maze.ysize - x2 % 2 - Maze.padding) return;
     var solutions = [], sola = [], solb = [];
@@ -309,56 +353,58 @@ function solvepolygonize(solutions) {
     }
 };
 
- function chasemouse()  {
-     Maze.solution_polys = [];
-     var vv = [[
-         [-GEO.dx, -GEO.dy],
-         [width + GEO.dx, -GEO.dy],
-         [width + GEO.dx, height + GEO.dy],
-         [-GEO.dx, height + GEO.dy]
-     ], v];
-     if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
-         var d = VisibilityPolygon.distance([mousex, mousey], [observer_x, observer_y]);
-         d = Math.sqrt(d);
-         if (d <= jump) return;
-         var x = observer_x + (mousex - observer_x) / d * Math.sqrt(d);
-         var y = observer_y + (mousey - observer_y) / d * Math.sqrt(d);
-         if (x < 0 || x > width || y < 0 || y > height) return;
-         if (VisibilityPolygon.inObstacle([x, y], Maze.obstacle_polys)) return;
-         observer_x = x;
-         observer_y = y;
-         mazeClient.updatePlayerPosition(x,y);
-         changed = true;
-     }
- };
+function chasemouse()  {
+    if(v === undefined) 
+        v = VisibilityPolygon.compute([observer_x*GEO.ss, observer_y*GEO.ss], Maze.obstacle_polys);
+    Maze.solution_polys = [];
+    var vv = [[
+        [-GEO.dx, -GEO.dy],
+        [width + GEO.dx, -GEO.dy],
+        [width + GEO.dx, height + GEO.dy],
+        [-GEO.dx, height + GEO.dy]
+    ], v];
+    if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
+        var d = VisibilityPolygon.distance([mousex, mousey], [observer_x*GEO.ss, observer_y*GEO.ss]);
+        d = Math.sqrt(d);
+        if (d <= GEO.ss) return;
+        var x = observer_x*GEO.ss + (mousex - observer_x*GEO.ss) / d * Math.sqrt(d);
+        var y = observer_y*GEO.ss + (mousey - observer_y*GEO.ss) / d * Math.sqrt(d);
+        if (x < 0 || x > width || y < 0 || y > height) return;
+        if (VisibilityPolygon.inObstacle([x, y], Maze.obstacle_polys)) return;
+        observer_x = x/GEO.ss;
+        observer_y = y/GEO.ss;
+        mazeClient.updatePlayerPosition(x/GEO.ss,y/GEO.ss);
+        changed = true;
+    }
+};
 
-  function update() {
-      chasemouse();
-      if (changed) {
-          var a1 = pixels2mazecell([mousex, mousey]), a2 = pixels2mazecell([observer_x, observer_y]);
-          solve(a1[0], a1[1], a2[0], a2[1]);
-          var canvas = document.getElementById('mazecanvas');
-          var ctx = canvas.getContext("2d");
-          // ctx.clearRect(0, 0, width, height);
-          draw(ctx);
-          changed = false;
-      }
-     requestAnimFrame(update);
+function update() {
+    chasemouse();
+    if (changed && started) {
+        v = VisibilityPolygon.compute([observer_x*GEO.ss, observer_y*GEO.ss], Maze.obstacle_polys);
+        var a1 = pixels2mazecell_int([mousex, mousey]), a2 = pixels2mazecell_int([observer_x*GEO.ss, observer_y*GEO.ss]);
+        solve(a1[0], a1[1], a2[0], a2[1]);
+        var canvas = document.getElementById('mazecanvas');
+        var ctx = canvas.getContext("2d");
+        // ctx.clearRect(0, 0, width, height);
+        draw(ctx);
+        changed = false;
+    }
+    requestAnimFrame(update);
  };
 
 // function checkKey(e) {
-//     var jump = 5;
 //     e = e || window.event;
 //     var x = observer_x;
 //     var y = observer_y;
 //     if (e.keyCode == '38') {
-//         y -= jump;
+//         y -= GEO.ss;
 //     } else if (e.keyCode == '40') {
-//         y += jump;
+//         y += GEO.ss;
 //     } else if (e.keyCode == '39') {
-//         x += jump;
+//         x += GEO.ss;
 //     } else if (e.keyCode == '37') {
-//         x -= jump;
+//         x -= GEO.ss;
 //     }
 //     if (x < 0 || x > width || y < 0 || y > height) return;
 //     if (VisibilityPolygon.inObstacle([x, y], Maze.obstacle_polys)) return;
@@ -417,38 +463,37 @@ function draw(ctx) {
     }
 
     /* display visibility polygon */
- v = VisibilityPolygon.compute([observer_x, observer_y], Maze.obstacle_polys);
- ctx.beginPath();
- ctx.moveTo(v[0][0], v[0][1]);
- for (var i = 1, j = v.length; i < j; i++) {
-     ctx.lineTo(v[i][0], v[i][1]);
- }
- ctx.fillStyle = "rgba(255,255,255,0.2)";
- ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(v[0][0], v[0][1]);
+    for (var i = 1, j = v.length; i < j; i++) {
+        ctx.lineTo(v[i][0], v[i][1]);
+    }
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fill();
 
- var vv = [[
-     [-GEO.dx, -GEO.dy],
-     [width + GEO.dx, -GEO.dy],
-     [width + GEO.dx, height + GEO.dy],
-     [-GEO.dx, height + GEO.dy]
- ], v];
- if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
-     ctx.save();
-     ctx.beginPath();
-     ctx.moveTo(mousex, mousey);
-     ctx.lineTo(observer_x, observer_y);
-     ctx.strokeStyle = '#fff';
-     ctx.stroke();
-     ctx.restore();
- }
+    var vv = [[
+        [-GEO.dx, -GEO.dy],
+        [width + GEO.dx, -GEO.dy],
+        [width + GEO.dx, height + GEO.dy],
+        [-GEO.dx, height + GEO.dy]
+    ], v];
+    if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(mousex, mousey);
+        ctx.lineTo(observer_x*GEO.ss, observer_y*GEO.ss);
+        ctx.strokeStyle = '#fff';
+        ctx.stroke();
+        ctx.restore();
+    }
     
     for (var m = 0; m < mazeClient.players.length; m++) {
         if (mazeClient.players[m] != mazeClient.currentPlayer) {
             ctx.save();
     
             ctx.beginPath();
-            ctx.arc(mazeClient.players[m].x, mazeClient.players[m].y, 5, 0, Math.PI * 2, true);
-            ctx.fillStyle = "red";
+            ctx.arc(mazeClient.players[m].x*GEO.ss, mazeClient.players[m].y*GEO.ss, 5, 0, Math.PI * 2, true);
+            ctx.fillStyle = "#f30";
             ctx.fill();
             ctx.restore();
         }
@@ -457,13 +502,10 @@ function draw(ctx) {
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(observer_x, observer_y, 5, 0, Math.PI * 2, true);
+    ctx.arc(observer_x*GEO.ss, observer_y*GEO.ss, 5, 0, Math.PI * 2, true);
     ctx.fillStyle = "#fff";
     ctx.fill();
     ctx.restore();
-    
-    ctx.restore();
-    
 };
 
 // stole this function from http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
