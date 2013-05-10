@@ -170,7 +170,7 @@ function GameRoom() {
     };
     self.startGame = function () {
         
-        var maze = new MazeGenerator(10, 10);
+        var maze = new MazeGenerator(20, 10);
 
         for (var i = 0; i < self.players.length; i++) {
             self.players[i].sendMessage('WaitingRoom.GameBeginning');

@@ -1,6 +1,6 @@
 window.mazeClient = new MazeClient(updateContent,gameTick);
 
-var changed, v, started = false;;
+var changed, v, vv, started = false;;
 
 function updateContent() {
     changed = true;
@@ -119,7 +119,7 @@ var requestAnimFrame = window.webkitRequestAnimationFrame ||
   window.mozRequestAnimationFrame ||
   window.msRequestAnimationFrame ||
   window.oRequestAnimationFrame ||
-  function (callback, element) { setTimeout(callback, 1000/16); };
+  function (callback, element) { setTimeout(callback, 1000/60); };
 
 window.onload = function () {
 
@@ -142,22 +142,20 @@ function init() {
         } else if (evt.layerX) {
             setMouseX = evt.layerX; setMouseY = evt.layerY;
         }
-        changed = true;
+        //console.log(mousex, mousey);
     };
 };
 
 function gameTick() {
-
-    if((setMouseX||setMouseY)!==undefined && (mousex!==setMouseX || mousey!==setMouseY)){
+    //console.log('clientTick');
+    if(setMouseX!==undefined && setMouseY!==undefined && (mousex!==setMouseX || mousey!==setMouseY)) {
         mousex=setMouseX/GEO.ss;
         mousey=setMouseY/GEO.ss;
-        if(canMove())
-        {
+        if(canMove(mousex, mousey)) {
             mazeClient.updatePlayerPosition(mousex,mousey);
         }
-
+        changed = true;
     }
-
 }
 
 function resize() {
@@ -349,6 +347,7 @@ function solve(x1, y1, x2, y2) {
 };
 
 function solvepolygonize(solutions) {
+    Maze.solution_polys = [];
     for (var a = 0, b = solutions.length; a < b; a++) {
         var x = solutions[a][0], y = solutions[a][1];
         if (Maze.sol[x][y]) {
@@ -380,23 +379,25 @@ function solvepolygonize(solutions) {
     }
 };
 
-function canMove(){
-    if(mousex===undefined || mousey===undefined )return false;
-    if(v === undefined)
-        v = VisibilityPolygon.compute([observer_x*GEO.ss, observer_y*GEO.ss], Maze.obstacle_polys);
-    Maze.solution_polys = [];
-    var vv = [[
+function computeVisibility() {
+    v = VisibilityPolygon.compute([observer_x*GEO.ss, observer_y*GEO.ss], Maze.obstacle_polys);
+    vv = [[
         [-GEO.dx, -GEO.dy],
         [width + GEO.dx, -GEO.dy],
         [width + GEO.dx, height + GEO.dy],
         [-GEO.dx, height + GEO.dy]
     ], v];
-    return VisibilityPolygon.inObstacle([mousex*GEO.ss, mousey*GEO.ss], vv);
+};
+
+function canMove(x, y){
+    if(x===undefined || y===undefined )return false;
+    if(v === undefined) computeVisibility();
+    return VisibilityPolygon.inObstacle([x*GEO.ss, y*GEO.ss], vv);
 }
 
 function chasemouse()  {
 
-    if (canMove()) {
+    if (canMove(mousex, mousey)) {
         var d = VisibilityPolygon.distance([mousex*GEO.ss, mousey*GEO.ss], [observer_x*GEO.ss, observer_y*GEO.ss]);
         d = Math.sqrt(d);
         if (d <= GEO.ss) return;
@@ -443,7 +444,7 @@ function update() {
     chasemouse();
     chaseOtherPlayers();
     if (changed && started) {
-        v = VisibilityPolygon.compute([observer_x*GEO.ss, observer_y*GEO.ss], Maze.obstacle_polys);
+        computeVisibility();
         var a1 = pixels2mazecell_int([mousex*GEO.ss, mousey*GEO.ss]), a2 = pixels2mazecell_int([observer_x*GEO.ss, observer_y*GEO.ss]);
         solve(a1[0], a1[1], a2[0], a2[1]);
         var canvas = document.getElementById('mazecanvas');
@@ -533,16 +534,10 @@ function draw(ctx) {
     ctx.fillStyle = "rgba(255,255,255,0.2)";
     ctx.fill();
 
-    var vv = [[
-        [-GEO.dx, -GEO.dy],
-        [width + GEO.dx, -GEO.dy],
-        [width + GEO.dx, height + GEO.dy],
-        [-GEO.dx, height + GEO.dy]
-    ], v];
-    if (VisibilityPolygon.inObstacle([mousex*GEO.ss, mousey*GEO.ss], vv)) {
+    if (canMove(mousex, mousey)) {
         ctx.save();
         ctx.beginPath();
-        ctx.moveTo(mousex*GEO.ss, mousey*GEO.ss);
+        ctx.moveTo(setMouseX, setMouseY);
         ctx.lineTo(observer_x*GEO.ss, observer_y*GEO.ss);
         ctx.strokeStyle = '#fff';
         ctx.stroke();
@@ -560,7 +555,6 @@ function draw(ctx) {
             ctx.restore();
         }
     }
-    
 
     ctx.save();
     ctx.beginPath();

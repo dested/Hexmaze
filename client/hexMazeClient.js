@@ -3,7 +3,7 @@
     self.players = [];
     self.currentPlayerID = null;
     self.currentPlayer = null;
-    var client = this.client = io.connect('198.211.107.235:2222');
+    var client = this.client = io.connect('192.168.1.68:2222');
 
 
     client.on('Game.PlayerLeft', function (data) {
@@ -25,31 +25,27 @@
         }
     });
     var tick = 0;
-var  tickInterval;
+    var tickInterval;
     client.on('Game.UpdateTick', function (data) {
         tick=data.tick;
-        if(tickInterval!==undefined){
- clearInterval(tickInterval);
+        if(tickInterval!==undefined) {
+            clearInterval(tickInterval);
         }
         serverTick();
-        tickInterval=setInterval(function () {
-            tick++;
-            clientTick();
-            serverTick();
-        }, 1000 / 10);
+        tickInterval=setInterval(ticker, 1000/10);
     });
-
 
     client.on('Game.Started', function(data){
         startGame(data);
-        //gametick
-        tickInterval=setInterval(function () {
-            tick++;
-            clientTick();
-            serverTick();
-        }, 1000 / 10);
-
+        tickInterval=setInterval(ticker, 1000/10);
     });
+
+    function ticker() {
+        //console.log('tick', tick, (new Date()).getTime());
+        tick++;
+        clientTick();
+        serverTick();
+    }
 
     function updatePlayers(update) {
         for (var j = 0; j < update.length; j++) {
@@ -63,7 +59,7 @@ var  tickInterval;
     }
 
     function serverTick() {
-
+        //console.log('serverTick');
         for (var m in updates) {
             if (m < tick) {
 
@@ -74,9 +70,9 @@ var  tickInterval;
 
         }
 
-        var update = updates[tick];
-        if (update) {
-            updatePlayers(update);
+        var _update = updates[tick];
+        if (_update) {
+            updatePlayers(_update);
             delete updates[tick];
 
             updateContent();
