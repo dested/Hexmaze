@@ -99,7 +99,7 @@ function GameRoom() {
 
         self.players.push(player);
 
-        var playersData = self.players.map(function (p) { return { userID: p.userID, x: 0, y: 0 }; });
+        var playersData = self.players.map(function (p) { return { userID: p.userID, x: 0, y: 0 ,moveToX:0,moveToY:0}; });
 
         var playersVoted = 0;
         for (var i = 0; i < self.players.length; i++) {
@@ -176,21 +176,38 @@ function GameRoom() {
             self.players[i].sendMessage('WaitingRoom.GameBeginning');
             self.players[i].sendMessage('Game.Started', maze); 
         }
+
+        startGameTick();
     };
+    var gameTick=0;
+    function startGameTick(){
+        //gametick
+        setInterval(function(){
+            gameTick++;
+            //serverTick();
+if(gameTick % 30){
+    for (var i = 0; i < self.players.length; i++) {
+        self.players[i].sendMessage('Game.UpdateTick', {tick:gameTick});
+    }
+}
+        },1000/10);
+    }
+
     self.movePlayer = function (player, moveData) {
 
-        player.position.x = moveData.x;
-        player.position.y = moveData.y;
+        //player.position.x = moveData.x;
+        //player.position.y = moveData.y;
         
         var sendData = {
             userID: player.userID,
-            x: player.position.x,
-            y: player.position.y
+            tick:gameTick+2,
+            x: moveData.x,
+            y: moveData.y
         };
         
         for (var i = 0; i < self.players.length; i++) {
             if (self.players[i].userID !== player.userID) {
-                console.log('sending position: ' + self.players[i].userID);
+                console.log('sending position: ' + self.players[i].userID+' at tick: '+gameTick);
 
                 
                 self.players[i].sendMessage('Game.UpdatePosition', [sendData]);

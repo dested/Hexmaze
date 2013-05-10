@@ -1,4 +1,4 @@
-window.mazeClient = new MazeClient(updateContent);
+window.mazeClient = new MazeClient(updateContent,gameTick);
 
 var changed, v, started = false;;
 
@@ -119,7 +119,7 @@ var requestAnimFrame = window.webkitRequestAnimationFrame ||
   window.mozRequestAnimationFrame ||
   window.msRequestAnimationFrame ||
   window.oRequestAnimationFrame ||
-  function (callback, element) { setTimeout(callback, 50); };
+  function (callback, element) { setTimeout(callback, 1000/16); };
 
 window.onload = function () {
 
@@ -133,17 +133,32 @@ window.onload = function () {
     //document.onkeydown = checkKey;
 };
 
+var setMouseX,setMouseY;
 function init() {
     var canvas = document.getElementById('mazecanvas');
     canvas.onmousemove = function (evt) {
         if (evt.offsetX) {
-            mousex = evt.offsetX; mousey = evt.offsetY;
+            setMouseX = evt.offsetX; setMouseY = evt.offsetY;
         } else if (evt.layerX) {
-            mousex = evt.layerX; mousey = evt.layerY;
+            setMouseX = evt.layerX; setMouseY = evt.layerY;
         }
         changed = true;
     };
 };
+
+function gameTick() {
+
+    if((setMouseX||setMouseY)!==undefined && (mousex!==setMouseX || mousey!==setMouseY)){
+        mousex=setMouseX/GEO.ss;
+        mousey=setMouseY/GEO.ss;
+        if(canMove())
+        {
+            mazeClient.updatePlayerPosition(mousex,mousey);
+        }
+
+    }
+
+}
 
 function resize() {
     var canvas = document.getElementById('mazecanvas');
@@ -205,6 +220,18 @@ function startGame(data) {
 
         observer_x/=GEO.ss;
         observer_y/=GEO.ss;
+
+        for (var m = 0; m < mazeClient.players.length; m++) {
+            if (mazeClient.players[m] != mazeClient.currentPlayer) {
+                mazeClient.players[m].x=observer_x;
+                mazeClient.players[m].y=observer_y;
+                mazeClient.players[m].moveToX=observer_x;
+                mazeClient.players[m].moveToY=observer_y;
+            }
+        }
+
+
+
         update();
 
         window.onresize = resize;
@@ -275,7 +302,7 @@ function plus(x, y, p) {
 };
 
 function solve(x1, y1, x2, y2) {
-    console.log(started, Maze.sol, x1, y1, x2, y2);
+    //console.log(started, Maze.sol, x1, y1, x2, y2);
     if(!Maze.xsize) return;
     if(!Maze.in[x1][y1] || Maze.prev[x1][y1] === null || Maze.prev[x1][y1] === undefined) return;
     if(!Maze.in[x2][y2] || Maze.prev[x2][y2] === null || Maze.prev[x2][y2] === undefined) return;
@@ -353,8 +380,9 @@ function solvepolygonize(solutions) {
     }
 };
 
-function chasemouse()  {
-    if(v === undefined) 
+function canMove(){
+    if(mousex===undefined || mousey===undefined )return false;
+    if(v === undefined)
         v = VisibilityPolygon.compute([observer_x*GEO.ss, observer_y*GEO.ss], Maze.obstacle_polys);
     Maze.solution_polys = [];
     var vv = [[
@@ -363,26 +391,60 @@ function chasemouse()  {
         [width + GEO.dx, height + GEO.dy],
         [-GEO.dx, height + GEO.dy]
     ], v];
-    if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
-        var d = VisibilityPolygon.distance([mousex, mousey], [observer_x*GEO.ss, observer_y*GEO.ss]);
+    return VisibilityPolygon.inObstacle([mousex*GEO.ss, mousey*GEO.ss], vv);
+}
+
+function chasemouse()  {
+
+    if (canMove()) {
+        var d = VisibilityPolygon.distance([mousex*GEO.ss, mousey*GEO.ss], [observer_x*GEO.ss, observer_y*GEO.ss]);
         d = Math.sqrt(d);
         if (d <= GEO.ss) return;
-        var x = observer_x*GEO.ss + (mousex - observer_x*GEO.ss) / d * Math.sqrt(d);
-        var y = observer_y*GEO.ss + (mousey - observer_y*GEO.ss) / d * Math.sqrt(d);
+        var x = observer_x*GEO.ss + (mousex*GEO.ss - observer_x*GEO.ss) / d * Math.sqrt(d);
+        var y = observer_y*GEO.ss + (mousey*GEO.ss - observer_y*GEO.ss) / d * Math.sqrt(d);
         if (x < 0 || x > width || y < 0 || y > height) return;
         if (VisibilityPolygon.inObstacle([x, y], Maze.obstacle_polys)) return;
         observer_x = x/GEO.ss;
         observer_y = y/GEO.ss;
-        mazeClient.updatePlayerPosition(x/GEO.ss,y/GEO.ss);
+
         changed = true;
     }
-};
+}
+
+
+function chaseOtherPlayers()  {
+
+    for(var i=0;i<mazeClient.players.length;i++){
+if(mazeClient.players[i] == mazeClient.currentPlayer)continue;
+        var player=mazeClient.players[i];
+
+        var d = VisibilityPolygon.distance([player.moveToX*GEO.ss, player.moveToY*GEO.ss], [player.x*GEO.ss, player.y*GEO.ss]);
+        d = Math.sqrt(d);
+        if (d <= GEO.ss) continue;
+        var x = player.x*GEO.ss + (player.moveToX*GEO.ss - player.x*GEO.ss) / d * Math.sqrt(d);
+        var y = player.y*GEO.ss + (player.moveToY*GEO.ss - player.y*GEO.ss) / d * Math.sqrt(d);
+        if (x < 0 || x > width || y < 0 || y > height) return;
+
+        player.x = x/GEO.ss;
+        player.y = y/GEO.ss;
+
+        changed = true;
+    }
+
+}
 
 function update() {
+    if(mousex===undefined || mousey===undefined ){
+//bah fix
+        requestAnimFrame(update);
+        return;
+    }
+
     chasemouse();
+    chaseOtherPlayers();
     if (changed && started) {
         v = VisibilityPolygon.compute([observer_x*GEO.ss, observer_y*GEO.ss], Maze.obstacle_polys);
-        var a1 = pixels2mazecell_int([mousex, mousey]), a2 = pixels2mazecell_int([observer_x*GEO.ss, observer_y*GEO.ss]);
+        var a1 = pixels2mazecell_int([mousex*GEO.ss, mousey*GEO.ss]), a2 = pixels2mazecell_int([observer_x*GEO.ss, observer_y*GEO.ss]);
         solve(a1[0], a1[1], a2[0], a2[1]);
         var canvas = document.getElementById('mazecanvas');
         var ctx = canvas.getContext("2d");
@@ -477,10 +539,10 @@ function draw(ctx) {
         [width + GEO.dx, height + GEO.dy],
         [-GEO.dx, height + GEO.dy]
     ], v];
-    if (VisibilityPolygon.inObstacle([mousex, mousey], vv)) {
+    if (VisibilityPolygon.inObstacle([mousex*GEO.ss, mousey*GEO.ss], vv)) {
         ctx.save();
         ctx.beginPath();
-        ctx.moveTo(mousex, mousey);
+        ctx.moveTo(mousex*GEO.ss, mousey*GEO.ss);
         ctx.lineTo(observer_x*GEO.ss, observer_y*GEO.ss);
         ctx.strokeStyle = '#fff';
         ctx.stroke();
