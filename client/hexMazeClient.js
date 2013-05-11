@@ -41,7 +41,7 @@
     });
 
     function ticker() {
-        //console.log('tick', tick, (new Date()).getTime());
+        console.log('tick', tick, (new Date()).getTime());
         tick++;
         clientTick();
         serverTick();
@@ -59,7 +59,6 @@
     }
 
     function serverTick() {
-        //console.log('serverTick');
         for (var m in updates) {
             if (m < tick) {
 

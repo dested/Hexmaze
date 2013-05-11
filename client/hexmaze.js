@@ -1,6 +1,6 @@
 window.mazeClient = new MazeClient(updateContent,gameTick);
 
-var changed, v, vv, started = false;;
+var changed, v, started = false;;
 
 function updateContent() {
     changed = true;
@@ -105,6 +105,7 @@ Maze = {
     sol: [[]],
     obstacle_polys: [],
     walkable_polys: [],
+    segments: [],
     padding: 1,
 
     solution_polys: [],
@@ -135,7 +136,7 @@ window.onload = function () {
 
 var setMouseX,setMouseY;
 function init() {
-    var canvas = document.getElementById('mazecanvas');
+    var canvas = document.getElementById('playersCanvas');
     canvas.onmousemove = function (evt) {
         if (evt.offsetX) {
             setMouseX = evt.offsetX; setMouseY = evt.offsetY;
@@ -156,42 +157,45 @@ function gameTick() {
         }
         changed = true;
     }
-}
+};
 
 function resize() {
-    var canvas = document.getElementById('mazecanvas');
-    canvas.height = height = window.innerHeight;
-    canvas.width = width = window.innerWidth;
+    var canvases = ['mazecanvas', 'visibilityCanvas', 'playersCanvas', 'solutionCanvas'];
+    for(var i=0; i<canvases.length; i++) {
+        var canvas = document.getElementById(canvases[i]);
+        canvas.height = height = window.innerHeight;
+        canvas.width = width = window.innerWidth;
 
-    var context = canvas.getContext("2d");
+        var context = canvas.getContext("2d");
 
-    /* for Retina display support */
-    var devicePixelRatio = window.devicePixelRatio || 1;
-    var backingStoreRatio = context.webkitBackingStorePixelRatio 
-        || context.mozBackingStorePixelRatio 
-        || context.msBackingStorePixelRatio 
-        || context.oBackingStorePixelRatio 
-        || context.backingStorePixelRatio || 1;
-    var ratio = devicePixelRatio / backingStoreRatio;
+        /* for Retina display support */
+        var devicePixelRatio = window.devicePixelRatio || 1;
+        var backingStoreRatio = context.webkitBackingStorePixelRatio 
+            || context.mozBackingStorePixelRatio 
+            || context.msBackingStorePixelRatio 
+            || context.oBackingStorePixelRatio 
+            || context.backingStorePixelRatio || 1;
+        var ratio = devicePixelRatio / backingStoreRatio;
 
-    // upscale the canvas if the two ratios don't match
-    if (devicePixelRatio !== backingStoreRatio) {
-        var oldWidth = canvas.width;
-        var oldHeight = canvas.height;
+        // upscale the canvas if the two ratios don't match
+        if (devicePixelRatio !== backingStoreRatio) {
+            var oldWidth = canvas.width;
+            var oldHeight = canvas.height;
 
-        canvas.width = oldWidth * ratio;
-        canvas.height = oldHeight * ratio;
+            canvas.width = oldWidth * ratio;
+            canvas.height = oldHeight * ratio;
 
-        canvas.style.width = oldWidth + 'px';
-        canvas.style.height = oldHeight + 'px';
+            canvas.style.width = oldWidth + 'px';
+            canvas.style.height = oldHeight + 'px';
 
-        context.scale(ratio, ratio);
+            context.scale(ratio, ratio);
+        }
     }
 
     GEO.setSize(Math.min(width/Maze.xsize/11, height/Maze.ysize/(1 + 10 * Math.sqrt(3) / 2)));
     polygonize();
     updateContent();
-}
+};
 
 
 function startGame(data) {
@@ -234,6 +238,10 @@ function startGame(data) {
 
         window.onresize = resize;
         started = true;
+
+        var canvas = document.getElementById('mazecanvas');
+        var ctx = canvas.getContext("2d");
+        draw_maze(ctx);
     }
     console.log(Maze);
 };
@@ -268,8 +276,7 @@ function polygonize() {
             }
         }
     }
-    Maze.obstacle_polys = VisibilityPolygon.convertToClockwise(Maze.obstacle_polys);
-    Maze.walkable_polys = VisibilityPolygon.convertToClockwise(Maze.walkable_polys);
+    Maze.segments = VisibilityPolygon.convertToSegments(Maze.obstacle_polys);
 };
 
 function pixels2mazecell_int(a) { 
@@ -380,23 +387,16 @@ function solvepolygonize(solutions) {
 };
 
 function computeVisibility() {
-    v = VisibilityPolygon.compute([observer_x*GEO.ss, observer_y*GEO.ss], Maze.obstacle_polys);
-    vv = [[
-        [-GEO.dx, -GEO.dy],
-        [width + GEO.dx, -GEO.dy],
-        [width + GEO.dx, height + GEO.dy],
-        [-GEO.dx, height + GEO.dy]
-    ], v];
+    v = VisibilityPolygon.compute([observer_x*GEO.ss, observer_y*GEO.ss], Maze.segments);
 };
 
-function canMove(x, y){
+function canMove(x, y) {
     if(x===undefined || y===undefined )return false;
     if(v === undefined) computeVisibility();
-    return VisibilityPolygon.inObstacle([x*GEO.ss, y*GEO.ss], vv);
-}
+    return VisibilityPolygon.inPolygon([x*GEO.ss, y*GEO.ss], v);
+};
 
 function chasemouse()  {
-
     if (canMove(mousex, mousey)) {
         var d = VisibilityPolygon.distance([mousex*GEO.ss, mousey*GEO.ss], [observer_x*GEO.ss, observer_y*GEO.ss]);
         d = Math.sqrt(d);
@@ -404,13 +404,13 @@ function chasemouse()  {
         var x = observer_x*GEO.ss + (mousex*GEO.ss - observer_x*GEO.ss) / d * Math.sqrt(d);
         var y = observer_y*GEO.ss + (mousey*GEO.ss - observer_y*GEO.ss) / d * Math.sqrt(d);
         if (x < 0 || x > width || y < 0 || y > height) return;
-        if (VisibilityPolygon.inObstacle([x, y], Maze.obstacle_polys)) return;
+        if (!canMove(x/GEO.ss, y/GEO.ss)) return;
         observer_x = x/GEO.ss;
         observer_y = y/GEO.ss;
 
         changed = true;
     }
-}
+};
 
 
 function chaseOtherPlayers()  {
@@ -432,7 +432,7 @@ if(mazeClient.players[i] == mazeClient.currentPlayer)continue;
         changed = true;
     }
 
-}
+};
 
 function update() {
     if(mousex===undefined || mousey===undefined ){
@@ -447,10 +447,7 @@ function update() {
         computeVisibility();
         var a1 = pixels2mazecell_int([mousex*GEO.ss, mousey*GEO.ss]), a2 = pixels2mazecell_int([observer_x*GEO.ss, observer_y*GEO.ss]);
         solve(a1[0], a1[1], a2[0], a2[1]);
-        var canvas = document.getElementById('mazecanvas');
-        var ctx = canvas.getContext("2d");
-        // ctx.clearRect(0, 0, width, height);
-        draw(ctx);
+        draw();
         changed = false;
     }
     requestAnimFrame(update);
@@ -470,14 +467,25 @@ function update() {
 //         x -= GEO.ss;
 //     }
 //     if (x < 0 || x > width || y < 0 || y > height) return;
-//     if (VisibilityPolygon.inObstacle([x, y], Maze.obstacle_polys)) return;
+//     if (!canMove(x/GEO.ss, y/GEO.ss)) return;
 //     observer_x = x;
 //     observer_y = y;
 //     changed = true;
 // };
 
-function draw(ctx) {
-    ctx.save();
+function draw() {
+    var visibilityCanvas = document.getElementById('visibilityCanvas');
+    var visibilityCtx = visibilityCanvas.getContext("2d");
+    draw_visibility(visibilityCtx);
+    var solutionCanvas = document.getElementById('solutionCanvas');
+    var solutionCtx = solutionCanvas.getContext("2d");
+    draw_solution(solutionCtx);
+    var playersCanvas = document.getElementById('playersCanvas');
+    var playersCtx = playersCanvas.getContext("2d");
+    draw_players(playersCtx);
+}
+
+function draw_maze(ctx) {
     ctx.beginPath();
     ctx.rect(0, 0, width, height);
     ctx.fillStyle = "#333";
@@ -510,8 +518,21 @@ function draw(ctx) {
     //   ctx.strokeStyle = '#0f0';
     //   ctx.stroke();
     // }
+};
 
-    /* display solution */
+function draw_visibility(ctx) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.beginPath();
+    ctx.moveTo(v[0][0], v[0][1]);
+    for (var i = 1, j = v.length; i < j; i++) {
+        ctx.lineTo(v[i][0], v[i][1]);
+    }
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fill();
+};
+
+function draw_solution(ctx) {
+    ctx.clearRect(0, 0, width, height);
     for (var i = 0, j = Maze.solution_polys.length; i < j; i++) {
         var qqq = Maze.solution_polys[i].polygon;
         ctx.beginPath();
@@ -524,16 +545,10 @@ function draw(ctx) {
         ctx.fillStyle = "rgb(" + Math.floor(red * 100) + "," + Math.floor(green * 100) + ",0)";
         ctx.fill();
     }
+};
 
-    /* display visibility polygon */
-    ctx.beginPath();
-    ctx.moveTo(v[0][0], v[0][1]);
-    for (var i = 1, j = v.length; i < j; i++) {
-        ctx.lineTo(v[i][0], v[i][1]);
-    }
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
-    ctx.fill();
-
+function draw_players(ctx) {
+    ctx.clearRect(0, 0, width, height);
     if (canMove(mousex, mousey)) {
         ctx.save();
         ctx.beginPath();

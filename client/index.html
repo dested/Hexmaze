@@ -45,6 +45,12 @@
             font-style: italic;
             color: #555;
         }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+        }
     </style>
     <script type="text/javascript" src="lib/jquery-1.9.1.js"></script>
     <script type="text/javascript" src="lib/jquery-ui-1.10.3.custom.js"></script>
@@ -60,6 +66,9 @@
 </head>
 <body>
     <canvas id="mazecanvas"></canvas>
+    <canvas id="solutionCanvas"></canvas>
+    <canvas id="visibilityCanvas"></canvas>
+    <canvas id="playersCanvas"></canvas>
     <div ng-controller="VoterCtrl">
         <div draggable class="ui" ng-style="windowVisible()">
             <h1>HexMaze</h1>
