@@ -192,8 +192,11 @@ function resize() {
         }
     }
 
-    GEO.setSize(Math.min(width/Maze.xsize/11, height/Maze.ysize/(1 + 10 * Math.sqrt(3) / 2)));
+    GEO.setSize(Math.min(width/Maze.xsize/8.5, height/Maze.ysize/(1 + 10 * Math.sqrt(3) / 2)));
     polygonize();
+    var canvas = document.getElementById('mazecanvas');
+    var ctx = canvas.getContext("2d");
+    draw_maze(ctx);
     updateContent();
 };
 
@@ -276,7 +279,28 @@ function polygonize() {
             }
         }
     }
-    Maze.segments = VisibilityPolygon.convertToSegments(Maze.obstacle_polys);
+    var segments = VisibilityPolygon.convertToSegments(Maze.obstacle_polys), _segments = {};
+    // remove duplicate segments to speed up VisibilityPolygon.
+    Maze.segments = [];
+    for(var i=0, ii=segments.length; i<ii; i++) {
+        var keyx = segments[i][0][0]+segments[i][1][0], keyy = segments[i][0][1]+segments[i][1][1];
+        keyx = Math.round(keyx/GEO.ss);
+        keyy = Math.round(keyy/GEO.ss);
+        if(_segments[keyx] === undefined) {
+            _segments[keyx] = {};
+        }
+        if(_segments[keyx][keyy] === undefined) {
+            _segments[keyx][keyy] = {count:0, seg:segments[i]};
+        }
+        _segments[keyx][keyy].count++;
+    }
+    for(var i in _segments) {
+        for(var j in _segments[i]) {
+            if(_segments[i][j].count === 1) {
+                Maze.segments.push(_segments[i][j].seg);
+            }
+        }
+    }
 };
 
 function pixels2mazecell_int(a) { 
@@ -307,6 +331,7 @@ function plus(x, y, p) {
 };
 
 function solve(x1, y1, x2, y2) {
+    Maze.solution_polys = [];
     //console.log(started, Maze.sol, x1, y1, x2, y2);
     if(!Maze.xsize) return;
     if(!Maze.in[x1][y1] || Maze.prev[x1][y1] === null || Maze.prev[x1][y1] === undefined) return;
@@ -354,7 +379,6 @@ function solve(x1, y1, x2, y2) {
 };
 
 function solvepolygonize(solutions) {
-    Maze.solution_polys = [];
     for (var a = 0, b = solutions.length; a < b; a++) {
         var x = solutions[a][0], y = solutions[a][1];
         if (Maze.sol[x][y]) {
@@ -506,16 +530,14 @@ function draw_maze(ctx) {
     }
 
     /* display wall */
-    // for(var i=1, j=Maze.obstacle_polys.length; i<j; i++) {
-    //   var qqq = Maze.obstacle_polys[i];
+    // for(var i=1, j=Maze.segments.length; i<j; i++) {
+    //   var qqq = Maze.segments[i];
     //   ctx.beginPath();
     //   ctx.moveTo(qqq[0][0], qqq[0][1]);
     //   for(var k=1, l=qqq.length; k<l; k++) {
     //     ctx.lineTo(qqq[k][0], qqq[k][1]);
     //   }
-    //   ctx.fillStyle = "#cfc";
-    //   ctx.fill();
-    //   ctx.strokeStyle = '#0f0';
+    //   ctx.strokeStyle = '#0ff';
     //   ctx.stroke();
     // }
 };

@@ -2,7 +2,7 @@
     // creates a maze of dimensions xsize_Maze and ysize_maze.
     // notice that the usable area is xsize_maze-2 by ysize_maze-2 since there is a padding of 1 cell.
     // also, even columns are shorter by 1 cell.
-
+    var noDeadEnds = false;
     var maze_in = [];
     var maze_prev = [];
     var maze_wall = [[], [], []]; // up, leftup, leftdown
@@ -37,8 +37,128 @@
                     neighbours.push(q[xcur % 2][p]);
                 }
             }
+            if(noDeadEnds && neighbours.length === 0) {
+                // remove wall randomly for a dead end.
+                var neighbors = [];
+                for (p = 0; p < 6; p++) {
+                    if (maze_prev[xcur + q[xcur % 2][p][0]][ycur + q[xcur % 2][p][1]]!== null &&
+                        maze_prev[xcur + q[xcur % 2][p][0]][ycur + q[xcur % 2][p][1]]!== undefined) {
+                        neighbors.push(q[xcur % 2][p]);
+                    }
+                }
+                var success = false;
+                while(!success) {
+                    var z = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    if (z[0] === -1) {
+                        if (xcur % 2 === 0) {
+                            if (z[1] === -1) {
+                                success = maze_wall[1][xcur][ycur] === 1;
+                                maze_wall[1][xcur][ycur] = 0;
+                            } else {
+                                success = maze_wall[2][xcur][ycur] === 1;
+                                maze_wall[2][xcur][ycur] = 0;
+                            }
+                        } else {
+                            if (z[1] === 0) {
+                                success = maze_wall[1][xcur][ycur] === 1;
+                                maze_wall[1][xcur][ycur] = 0;
+                            } else {
+                                success = maze_wall[2][xcur][ycur] === 1;
+                                maze_wall[2][xcur][ycur] = 0;
+                            }
+                        }
+                    } else if (z[0] === 0) {
+                        if (z[1] === -1) {
+                            success = maze_wall[0][xcur][ycur] === 1;
+                            maze_wall[0][xcur][ycur] = 0;
+                        } else {
+                            success = maze_wall[0][xcur][ycur + 1] === 1;
+                            maze_wall[0][xcur][ycur + 1] = 0;
+                        }
+                    } else {
+                        if (xcur % 2 === 0) {
+                            if (z[1] === -1) {
+                                success = maze_wall[2][xcur + 1][ycur - 1] === 1;
+                                maze_wall[2][xcur + 1][ycur - 1] = 0;
+                            } else {
+                                success = maze_wall[1][xcur + 1][ycur] === 1;
+                                maze_wall[1][xcur + 1][ycur] = 0;
+                            }
+                        } else {
+                            if (z[1] === 0) {
+                                success = maze_wall[2][xcur + 1][ycur] === 1;
+                                maze_wall[2][xcur + 1][ycur] = 0;
+                            } else {
+                                success = maze_wall[1][xcur + 1][ycur + 1] === 1;
+                                maze_wall[1][xcur + 1][ycur + 1] = 0;
+                            }
+                        }
+                    }
+                }
+            }
             while (neighbours.length === 0) {
-                if (maze_prev[xcur][ycur][0] === xcur && maze_prev[xcur][ycur][1] === ycur) return;
+                if (maze_prev[xcur][ycur][0] === xcur && maze_prev[xcur][ycur][1] === ycur) {
+                    if(noDeadEnds) {
+                        // remove wall for the seed cell
+                        var neighbors = [];
+                        for (p = 0; p < 6; p++) {
+                            if (maze_prev[xcur + q[xcur % 2][p][0]][ycur + q[xcur % 2][p][1]]!== null &&
+                                maze_prev[xcur + q[xcur % 2][p][0]][ycur + q[xcur % 2][p][1]]!== undefined) {
+                                neighbors.push(q[xcur % 2][p]);
+                            }
+                        }
+                        var success = false;
+                        while(!success) {
+                            var z = neighbors[Math.floor(Math.random() * neighbors.length)];
+                            if (z[0] === -1) {
+                                if (xcur % 2 === 0) {
+                                    if (z[1] === -1) {
+                                        success = maze_wall[1][xcur][ycur] === 1;
+                                        maze_wall[1][xcur][ycur] = 0;
+                                    } else {
+                                        success = maze_wall[2][xcur][ycur] === 1;
+                                        maze_wall[2][xcur][ycur] = 0;
+                                    }
+                                } else {
+                                    if (z[1] === 0) {
+                                        success = maze_wall[1][xcur][ycur] === 1;
+                                        maze_wall[1][xcur][ycur] = 0;
+                                    } else {
+                                        success = maze_wall[2][xcur][ycur] === 1;
+                                        maze_wall[2][xcur][ycur] = 0;
+                                    }
+                                }
+                            } else if (z[0] === 0) {
+                                if (z[1] === -1) {
+                                    success = maze_wall[0][xcur][ycur] === 1;
+                                    maze_wall[0][xcur][ycur] = 0;
+                                } else {
+                                    success = maze_wall[0][xcur][ycur + 1] === 1;
+                                    maze_wall[0][xcur][ycur + 1] = 0;
+                                }
+                            } else {
+                                if (xcur % 2 === 0) {
+                                    if (z[1] === -1) {
+                                        success = maze_wall[2][xcur + 1][ycur - 1] === 1;
+                                        maze_wall[2][xcur + 1][ycur - 1] = 0;
+                                    } else {
+                                        success = maze_wall[1][xcur + 1][ycur] === 1;
+                                        maze_wall[1][xcur + 1][ycur] = 0;
+                                    }
+                                } else {
+                                    if (z[1] === 0) {
+                                        success = maze_wall[2][xcur + 1][ycur] === 1;
+                                        maze_wall[2][xcur + 1][ycur] = 0;
+                                    } else {
+                                        success = maze_wall[1][xcur + 1][ycur + 1] === 1;
+                                        maze_wall[1][xcur + 1][ycur + 1] = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
                 var _xcur = maze_prev[xcur][ycur][0];
                 ycur = maze_prev[xcur][ycur][1];
                 xcur = _xcur;
