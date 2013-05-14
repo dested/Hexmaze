@@ -143,6 +143,8 @@ function init() {
         } else if (evt.layerX) {
             setMouseX = evt.layerX; setMouseY = evt.layerY;
         }
+        mousex=setMouseX/GEO.ss;
+        mousey=setMouseY/GEO.ss;
         //console.log(mousex, mousey);
     };
 };
@@ -171,7 +173,7 @@ function resize() {
         /* for Retina display support */
         var devicePixelRatio = window.devicePixelRatio || 1;
         var backingStoreRatio = context.webkitBackingStorePixelRatio 
-            || context.mozBackingStorePixelRatio 
+            || context.mozBackingStorePixelRatio
             || context.msBackingStorePixelRatio 
             || context.oBackingStorePixelRatio 
             || context.backingStorePixelRatio || 1;
@@ -551,7 +553,7 @@ function draw_visibility(ctx) {
     }
     ctx.fillStyle = "rgba(255,255,255,0.2)";
     ctx.fill();
-};
+}
 
 function draw_solution(ctx) {
     ctx.clearRect(0, 0, width, height);
@@ -567,7 +569,7 @@ function draw_solution(ctx) {
         ctx.fillStyle = "rgb(" + Math.floor(red * 100) + "," + Math.floor(green * 100) + ",0)";
         ctx.fill();
     }
-};
+}
 
 function draw_players(ctx) {
     ctx.clearRect(0, 0, width, height);
@@ -599,7 +601,7 @@ function draw_players(ctx) {
     ctx.fillStyle = "#fff";
     ctx.fill();
     ctx.restore();
-};
+}
 
 // stole this function from http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
 function clone(obj) {
@@ -632,4 +634,4 @@ function clone(obj) {
     }
 
     throw new Error("Unable to copy obj! Its type isn't supported.");
-};
+}

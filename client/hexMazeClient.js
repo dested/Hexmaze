@@ -3,7 +3,7 @@
     self.players = [];
     self.currentPlayerID = null;
     self.currentPlayer = null;
-    var client = this.client = io.connect('192.168.1.68:2222');
+    var client = this.client = io.connect('198.211.107.235:80');
 
 
     client.on('Game.PlayerLeft', function (data) {
@@ -27,6 +27,10 @@
     var tick = 0;
     var tickInterval;
     client.on('Game.UpdateTick', function (data) {
+        console.log('ticked from', tick, 'to',data.tick, (new Date()).getTime());
+        if(tick==data.tick)
+            return;
+
         tick=data.tick;
         if(tickInterval!==undefined) {
             clearInterval(tickInterval);
